@@ -28,11 +28,7 @@ class DeliverooApi extends EventEmitter {
     async move ( direction ) {
         return new Promise( (success, reject) => {
             this.socket.emit( 'move', direction, async (status) =>  {
-                if (status) {
-                    success();
-                } else {
-                    reject();
-                }
+                success( status );
             } );
         } );
     }
@@ -40,7 +36,7 @@ class DeliverooApi extends EventEmitter {
     async pickup (  ) {
         return new Promise( (success) => {
             this.socket.emit( 'pickup', async ( picked ) =>  {
-                success( picked);
+                success( picked );
             } );
         } );
     }
