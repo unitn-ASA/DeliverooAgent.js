@@ -1,8 +1,10 @@
-const fs = require('fs')
+import fs from 'fs';
+
+
 
 const padding = ' '.repeat(4)
 
-class PddlDomain {
+export default class PddlDomain {
     
     constructor (name, predicates = [], actions = []) {
         this.name = name
@@ -87,7 +89,7 @@ class PddlDomain {
     get content() {
         return `\
 ;; domain file: domain-${this.name}.pddl
-(define (domain ${this.name})
+(define (domain default)
     (:requirements :strips)
     (:predicates
         ${this.predicates.map( p => p.toPddlString()).join('\n' + padding.repeat(2))}              
@@ -108,5 +110,3 @@ class PddlDomain {
 // lightDomain.saveToFile()
 
 
-
-module.exports = PddlDomain

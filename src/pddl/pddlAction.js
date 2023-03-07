@@ -1,18 +1,14 @@
 
 
-class pddlAction {
+export default class pddlAction {
 
     // Example LightOn:
     // static parameters = ['l']
     // static precondition = [ ['switched-off', 'l'] ]
     // static effect = [ ['switched-on', 'l'], ['not switched-off', 'l'] ]
-    //
-    // static applicable (goal) {
-    //     return ( goal instanceof PlanningGoal && goal.parameters.hasOwnProperty('l') )
-    // }
-    //
-    // exec () {
-    //     applyEffect()
+    // 
+    // exec (args) {
+    //     push a subGoal? applyEffect()?
     // }
 
     toString() {
@@ -69,6 +65,3 @@ class pddlAction {
     
 }
 
-
-
-module.exports = pddlAction

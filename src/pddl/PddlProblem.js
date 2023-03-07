@@ -1,8 +1,8 @@
-const fs = require('fs')
+import fs from 'fs';
 
 
 
-class PddlProblem {
+export default class PddlProblem {
     
     constructor (name, objects = [], inits = [], goals = []) {
         this.name = name
@@ -54,8 +54,8 @@ class PddlProblem {
     get content() {
         return `\
 ;; problem file: problem-${this.name}.pddl
-(define (problem ${this.name})
-    (:domain ${this.name})
+(define (problem default)
+    (:domain default)
     (:objects ${this.objects.toPddlString()})
 	(:init ${this.inits.toPddlString()})
 	(:goal ${this.goals.toPddlString()})
@@ -73,6 +73,3 @@ class PddlProblem {
 // lightProblem.addGoal('switched-on light1')
 // lightProblem.saveToFile()
 
-
-
-module.exports = PddlProblem
