@@ -4,7 +4,7 @@
     
 // valid locally
 let host = "http://localhost:8080";
-let token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImVjY2MxNWIwM2EyIiwibmFtZSI6InRlc3QiLCJpYXQiOjE2NzkzOTg3NTZ9.jkcxRxGT8WVXXwJxr3NnwcuL3UF9XnURMJsKNk6BPbw'
+let token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjViNzMzZThkNjg1IiwibmFtZSI6Im1hcmNvIiwiaWF0IjoxNjc5NDE4MjU1fQ.BuwcSQ8ipDDlWRNVr4bHHNBbmnGzfXww0ZVyi-yqfyw'
 
 export { host };
 export { token };
