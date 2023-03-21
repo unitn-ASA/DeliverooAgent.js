@@ -6,7 +6,9 @@
   "main": "index.js",
   "module": "index.js",
   "scripts": {
-    "start": "node simple_agent_2.js",
+    "start": "node index.js",
+    "raw_socketio_agent": "node .lib\\deliverooClient\\examples\\raw_socketio_agent.js",
+    "client_agent": "node .lib\\deliverooClient\\examples\\client_agent.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Marco",
