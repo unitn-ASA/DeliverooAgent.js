@@ -1,5 +1,6 @@
-import * as config from "../../../config.js";
-import { timer, DeliverooApi } from "../index.js";
+#!/usr/bin/env node
+import { default as config } from "./config.js";
+import { DeliverooApi, timer } from "@unitn-asa/deliveroo-js-client";
 
 const client = new DeliverooApi( config.host, config.token )
 
@@ -21,5 +22,5 @@ client.ask( '0858a04228e', 'who are you?' ).then( (reply) => console.log(reply) 
 
 
 
-// await timer(100);
+// await client.timer(100);
 // process.exit();

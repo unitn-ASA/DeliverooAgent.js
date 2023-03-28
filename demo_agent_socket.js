@@ -1,6 +1,5 @@
+import { default as config } from "./config.js";
 import { io } from "socket.io-client";
-import * as config from "../../../config.js";
-
 
 var socket = io( config.host, {
     extraHeaders: {
@@ -35,7 +34,7 @@ async function randomlyMove () {
     }
 
     while ( true ) {
-
+        
         let direction = [ 'up', 'right', 'down', 'left' ][ (direction_index) % 4 ]
 
         await new Promise( (success, reject) => socket.emit('move', getDirection(), async (status) =>  {
@@ -46,8 +45,9 @@ async function randomlyMove () {
                 console.log( 'moved', direction, 'next move', direction_index )
 
                 await new Promise( res => setTimeout(res, 100) ); // wait 0.1 sec
-                socket.emit( 'putdown' );
                 
+                socket.emit( 'putdown' );
+
                 await new Promise( res => setTimeout(res, 100) ); // wait 0.1 sec
                 socket.emit( 'pickup' );
 

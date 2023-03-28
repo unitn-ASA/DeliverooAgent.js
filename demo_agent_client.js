@@ -1,7 +1,5 @@
-import * as config from "../../../config.js";
-// import { timer } from "./src/timer.js";
-// import { DeliverooApi } from "./src/DeliverooApi.js";
-import { timer, DeliverooApi } from "../index.js";
+import { default as config } from "./config.js";
+import { DeliverooApi, timer } from "@unitn-asa/deliveroo-js-client";
 
 const client = new DeliverooApi( config.host, config.token )
 
@@ -25,16 +23,16 @@ async function agentLoop () {
     }
 
     while ( true ) {
-
-        await timer(100); // wait 0.1 sec and retry; if stucked, this avoid infinite loop
+        
+        await client.timer(100); // wait 0.1 sec and retry; if stucked, this avoid infinite loop
 
         await client.putdown();
 
-        await timer(100); // wait 0.1 sec
+        await client.timer(100); // wait 0.1 sec
 
         await client.pickup();
 
-        await timer(100); // wait 0.1 sec
+        await client.timer(100); // wait 0.1 sec
 
         directionIndex += [0,1,3][ Math.floor(Math.random()*3) ]; // straigth or turn left or right, not going back
         
