@@ -7,20 +7,31 @@ const client = new DeliverooApi(
 
 const db = new Map()
 
-client.socket.on( 'parcels sensing', ( parcels ) => {
+// client.socket.on( 'parcels sensing', ( parcels ) => {
     
-    // const pretty = Array.from(parcels)
-    //     .map( ( {id,x,y,carriedBy,reward} ) => {
-    //         return reward; //`(${x},${y},${reward})`
-    //     } )
-    //     .join( ' ' )
-    // console.log( pretty )
+//     const pretty = Array.from(parcels)
+//         .map( ( {id,x,y,carriedBy,reward} ) => {
+//             return reward; //`(${x},${y},${reward})`
+//         } )
+//         .join( ' ' )
+//     console.log( pretty )
 
-    for (const p of parcels) {
-        db.set( p.id, p)
-    }
+//     // for (const p of parcels) {
+//     //     db.set( p.id, p)
+//     // }
     
-    console.log( db )
+//     // console.log( db )
+
+// } )
+
+client.onAgentsSensing( ( agents ) => {
+    
+    const pretty = Array.from(agents)
+        .map( ( {id,name,x,y,score} ) => {
+            return `${name}(${x},${y})`
+        } )
+        .join( ' ' )
+    console.log( pretty )
 
 } )
 
