@@ -5,10 +5,13 @@ const LOG_FROM = process.argv.slice(2);
 
 const client = new DeliverooApi( config.host, config.token );
 
-client.socket.on( 'log', ( socket, id, name, ...message ) => {
+client.socket.on( 'log', ( {src, timestamp, socket, id, name}, ...message ) => {
 
     if ( LOG_FROM.length==0 || LOG_FROM.includes(socket) || LOG_FROM.includes(id) || LOG_FROM.includes(name) ) {
-        console.log( socket, id, name, '\t', ...message );
+        if ( src == 'server' )
+            console.log( 'server', timestamp, '\t', ...message )
+        else
+            console.log( 'client', timestamp, socket, id, name, '\t', ...message );
     }
 
 } );
