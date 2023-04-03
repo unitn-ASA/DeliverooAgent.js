@@ -2,55 +2,50 @@ import { default as config } from "./config.js";
 import { DeliverooApi, timer } from "@unitn-asa/deliveroo-js-client";
 
 const client = new DeliverooApi( config.host, config.token )
-
-client.on("connect", () => {
-    console.log( "socket connect", client.socket.id ); // x8WIv7-mJelg7on_ALbxc
-});
-
-client.on("disconnect", () => {
-    console.log( "socket disconnect", client.socket.id ); // x8WIv7-mJelg7on_ALbxc
-});
-
+client.onConnect( () => console.log( "socket", client.socket.id ) );
+client.onDisconnect( () => console.log( "disconnected", client.socket.id ) );
 
 async function agentLoop () {
 
-    var directionIndex = 1; // 'right'
-
-    function directionString () {
-        if (directionIndex > 3)
-            directionIndex = directionIndex % 4;
-        return [ 'up', 'right', 'down', 'left' ][ directionIndex ];
-    }
+    var previous = 'right'
 
     while ( true ) {
-        
-        await client.timer(100); // wait 0.1 sec and retry; if stucked, this avoid infinite loop
 
         await client.putdown();
 
-        await client.timer(100); // wait 0.1 sec
-
         await client.pickup();
 
-        await client.timer(100); // wait 0.1 sec
+        let tried = [];
 
-        directionIndex += [0,1,3][ Math.floor(Math.random()*3) ]; // straigth or turn left or right, not going back
-        
-        var status = await client.move( directionString() )
-        
-        if ( ! status ) {
+        while ( tried.length < 4 ) {
             
-            console.log( 'move failed' )
+            let current = { up: 'down', right: 'left', down: 'up', left: 'right' }[previous] // backward
 
-            directionIndex += [2,1,3][ Math.floor(Math.random()*3) ]; // backward or turn left or right, not try again straight, which just failed
-
+            if ( tried.length < 3 ) { // try haed or turn (before going backward)
+                current = [ 'up', 'right', 'down', 'left' ].filter( d => d != current )[ Math.floor(Math.random()*3) ];
+            }
+            
+            if ( ! tried.includes(current) ) {
+                
+                if ( await client.move( current ) ) {
+                    console.log( 'moved', current );
+                    previous = current;
+                    break; // moved, continue
+                }
+                
+                tried.push( current );
+                
+            }
+            
         }
+
+        if ( tried.length == 4 ) {
+            console.log( 'stucked' );
+            await client.timer(1000); // stucked, wait 1 sec and retry
+        }
+
 
     }
 }
 
 agentLoop()
-
-client.on( 'you', me => console.log(me) ) // {id, name, x, y, score}
-client.on( 'agents sensing', aa => console.log(aa) ) // [ {}, {id, x, y, score}]
-client.on( 'parcels sensing', pp => console.log(pp) ) // [ {}, {id, x, y, carriedBy, reward}]
