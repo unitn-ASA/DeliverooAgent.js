@@ -1,4 +1,5 @@
 import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
+import EventEmitter from "events";
 import depth_search_daemon from "./depth_search_daemon.js";
 
 const client = new DeliverooApi(
@@ -26,9 +27,14 @@ client.onYou( ( {id, name, x, y, score} ) => {
     me.y = y
     me.score = score
 } )
+
 const parcels = new Map();
+const sensingEmitter = new EventEmitter();
 client.onParcelsSensing( async ( perceived_parcels ) => {
+    let new_parcel_sensed = false;
     for (const p of perceived_parcels) {
+        if ( ! parcels.has(p.id) )
+            new_parcel_sensed = true;
         parcels.set( p.id, p)
         if ( p.carriedBy == me.id ) {
             me.carrying.set( p.id, p );
@@ -40,6 +46,8 @@ client.onParcelsSensing( async ( perceived_parcels ) => {
             me.carrying.delete( id );
         }
     }
+    if (new_parcel_sensed)
+        sensingEmitter.emit("new_parcel")
 } )
 
 var AGENTS_OBSERVATION_DISTANCE
@@ -74,6 +82,9 @@ client.onTile( (x, y, delivery) => {
     map.add( {x, y, delivery} );
 } )
 
+function nearestDelivery({x, y}) {
+    return Array.from( map.tiles.values() ).filter( ({delivery}) => delivery ).sort( (a,b) => distance(a,{x, y})-distance(b,{x, y}) )[0]
+}
 
 
 /**
@@ -83,6 +94,10 @@ client.onParcelsSensing( parcels => {
 
     // TODO revisit beliefset revision so to trigger option generation only in the case a new parcel is observed
 
+    let carriedQty = me.carrying.size;
+    let carriedReward = Array.from( me.carrying.values() ).reduce( (acc, parcel) => acc + parcel.reward, 0 )
+    let deliveryTile = nearestDelivery(me)
+
     /**
      * Options generation
      */
@@ -91,11 +106,8 @@ client.onParcelsSensing( parcels => {
         if ( ! parcel.carriedBy )
             options.push( [ 'go_pick_up', parcel.x, parcel.y, parcel.id, parcel.reward ] );
     }
-    let carriedQty = me.carrying.size;
-    let carriedReward = Array.from( me.carrying.values() ).reduce( (acc, parcel) => acc + parcel.reward, 0 )
-    let nearestDelivery = Array.from( map.tiles.values() ).filter( ({delivery}) => delivery ).sort( (a,b) => distance(a,me)-distance(b,me) )[0]
     if ( carriedReward > 0 ) {
-        options.push( [ 'go_deliver', nearestDelivery.x, nearestDelivery.y ] );
+        options.push( [ 'go_deliver', deliveryTile.x, deliveryTile.y ] );
     }
     
     /**
@@ -104,17 +116,18 @@ client.onParcelsSensing( parcels => {
     let best_option;
     let best_final_reward = 0; // parcel value - cost for pick up - cost for delivery  //Number.MAX_VALUE;
     for (const option of options) {
-        if ( option[0] == 'go_pick_up' ) {
-            let [go_pick_up,x,y,id,reward] = option;
-            let current_reward = carriedReward + reward - (carriedQty+1) * MOVEMENT_DURATION/PARCEL_DECADING_INTERVAL * (distance( {x, y}, me ) + distance( {x, y}, nearestDelivery ) ); // parcel value - cost for pick up - cost for delivery
+        if ( option[0] == 'go_deliver' ) {
+            let [go_pick_up,x,y] = option;
+            let current_reward = carriedReward - carriedQty * MOVEMENT_DURATION/PARCEL_DECADING_INTERVAL * distance( me, deliveryTile ); // carried parcels value - cost for delivery
             if ( current_reward > best_final_reward ) {
                 best_option = option;
                 best_final_reward = current_reward;
             }
         }
-        if ( option[0] == 'go_deliver' ) {
-            let [go_pick_up,x,y] = option;
-            let current_reward = carriedReward - carriedQty * MOVEMENT_DURATION/PARCEL_DECADING_INTERVAL * distance( me, nearestDelivery ); // carried parcels value - cost for delivery
+        if ( option[0] == 'go_pick_up' ) {
+            let [go_pick_up,x,y,id,reward] = option;
+            deliveryTile = nearestDelivery({x, y});
+            let current_reward = carriedReward + reward - (carriedQty+1) * MOVEMENT_DURATION/PARCEL_DECADING_INTERVAL * (distance( {x, y}, me ) + distance( {x, y}, deliveryTile ) ); // parcel value - cost for pick up - cost for delivery
             if ( current_reward > best_final_reward ) {
                 best_option = option;
                 best_final_reward = current_reward;
@@ -194,13 +207,14 @@ class Intention {
         for (const planClass of planLibrary) {
 
             // if stopped then quit
-            if ( this.stopped ) throw [ 'stopped intention', ...this.predicate ];
+            if ( this.stopped )
+                break;
 
             // if plan is 'statically' applicable
             if ( planClass.isApplicableTo( ...this.predicate ) ) {
                 // plan is instantiated
                 this.#current_plan = new planClass(this.parent);
-                this.log('achieving intention', ...this.predicate, 'with plan', planClass.name);
+                // this.log('achieving intention', ...this.predicate, 'with plan', planClass.name);
                 // and plan is executed and result returned
                 try {
                     const plan_res = await this.#current_plan.execute( ...this.predicate );
@@ -208,7 +222,9 @@ class Intention {
                     return plan_res
                 // or errors are caught so to continue with next plan
                 } catch (error) {
-                    this.log( 'failed intention', ...this.predicate,'with plan', planClass.name, 'with error:', error );
+                    if ( this.stopped )
+                        break;
+                    this.log( 'failed intention', ...this.predicate, 'with plan', planClass.name, 'with error:', error );
                 }
             }
 
@@ -266,7 +282,7 @@ class Plan {
     async subIntention ( predicate ) {
         const sub_intention = new Intention( this, predicate );
         this.#sub_intentions.push( sub_intention );
-        return await sub_intention.achieve();
+        return sub_intention.achieve();
     }
 
 }
@@ -342,7 +358,7 @@ class DepthSearchMove extends Plan {
             me.y = status.y;
             
             if ( ! status ) {
-                this.log('stucked');
+                // this.log('stucked');
                 throw 'stucked';
             }
 
@@ -352,7 +368,6 @@ class DepthSearchMove extends Plan {
             return true;
         }
         
-        this.log('target not reached');
         throw 'target not reached';
 
     }
@@ -466,7 +481,8 @@ class IntentionRevision {
                 await intention.achieve()
                 // Catch eventual error and continue
                 .catch( error => {
-                    console.log( 'Failed intention', ...intention.predicate, 'with error:', error )
+                    if ( !intention.stopped )
+                        console.error( 'Failed intention', ...intention.predicate, 'with error:', error )
                 } );
 
                 // Remove from the queue

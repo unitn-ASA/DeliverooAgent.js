@@ -24,6 +24,11 @@ export default function ( /**@type {DeliverooApi}*/client ) {
             map.set(x, new Map())    
         map.get(x).set(y, {x, y, delivery})
     } );
+    client.onNotTile( ( x, y ) => {
+        if ( ! map.has(x) )
+            map.set(x, new Map())    
+        map.get(x).delete(y)
+    } );
     
     var me = {};
     client.onYou( ( {x, y} ) => {
@@ -49,7 +54,7 @@ export default function ( /**@type {DeliverooApi}*/client ) {
             map.get(Math.floor(x)).get(Math.floor(y)).locked = true;
         }
 
-        console.log('go from', me.x, me.y, 'to', target_x, target_y);
+        // console.log('go from', me.x, me.y, 'to', target_x, target_y);
 
         function search (cost, x, y, previous_tile, action_from_previous) {
 
