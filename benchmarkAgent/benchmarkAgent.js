@@ -8,10 +8,14 @@ const client = new DeliverooApi(
 )
 const depth_search = depth_search_daemon(client);
 
-function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
-    const dx = Math.abs( Math.round(x1) - Math.round(x2) )
-    const dy = Math.abs( Math.round(y1) - Math.round(y2) )
-    return dx + dy;
+// function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
+//     const dx = Math.abs( Math.round(x1) - Math.round(x2) )
+//     const dy = Math.abs( Math.round(y1) - Math.round(y2) )
+//     return dx + dy;
+// }
+
+function distance( {x:x1, y:y1}, {x:x2, y:y2} ) {
+    return depth_search( {x:x1, y:y1}, {x:x2, y:y2} ).length;
 }
 
 
@@ -347,17 +351,20 @@ class DepthSearchMove extends Plan {
 
     async execute ( go_to, x, y ) {
 
-        const plan = depth_search(x, y)
+        this.log( 'DepthSearchMove', 'depth_search',  me.x, me.y, {x, y} )
+        const plan = depth_search(me, {x, y})
 
         for ( const step of plan ) {
 
             if ( this.stopped ) throw ['stopped']; // if stopped then quit
             
             const status = await client.move( step.action )
-            me.x = status.x;
-            me.y = status.y;
-            
-            if ( ! status ) {
+
+            if ( status ) {
+                me.x = status.x;
+                me.y = status.y;
+            }
+            else {
                 // this.log('stucked');
                 throw 'stucked';
             }
@@ -417,7 +424,7 @@ class BlindMove extends Plan {
             }
             
             if ( ! status_x && ! status_y) {
-                this.log('stucked');
+                // this.log('stucked');
                 throw 'stucked';
             } else if ( me.x == x && me.y == y ) {
                 // this.log('target reached');
@@ -435,7 +442,7 @@ planLibrary.push( GoPickUp )
 planLibrary.push( Patrolling )
 planLibrary.push( GoDeliver )
 planLibrary.push( DepthSearchMove )
-planLibrary.push( BlindMove )
+// planLibrary.push( BlindMove )
 
 
 

@@ -47,8 +47,13 @@ export default function ( /**@type {DeliverooApi}*/client ) {
         }
     } );
 
-    return function (target_x, target_y) {
+    return function ( {x:init_x, y:init_y}, {x:target_x, y:target_y} ) {
         
+        init_x = Math.round(init_x);
+        init_y = Math.round(init_y);
+        target_x = Math.round(target_x);
+        target_y = Math.round(target_y);
+
         for ( const {id, x, y} of agents.values() ) {
             map.get(Math.ceil(x)).get(Math.ceil(y)).locked = true;
             map.get(Math.floor(x)).get(Math.floor(y)).locked = true;
@@ -98,7 +103,7 @@ export default function ( /**@type {DeliverooApi}*/client ) {
             
         }
 
-        search(0, me.x, me.y);
+        search(0, init_x, init_y);
 
         let dest = map.get(target_x).get(target_y);
         
