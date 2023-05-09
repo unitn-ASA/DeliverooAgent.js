@@ -55,8 +55,12 @@ export default function ( /**@type {DeliverooApi}*/client ) {
         target_y = Math.round(target_y);
 
         for ( const {id, x, y} of agents.values() ) {
-            map.get(Math.ceil(x)).get(Math.ceil(y)).locked = true;
-            map.get(Math.floor(x)).get(Math.floor(y)).locked = true;
+            try{
+                map.get(Math.ceil(x)).get(Math.ceil(y)).locked = true;
+            } catch {}
+            try{
+                map.get(Math.floor(x)).get(Math.floor(y)).locked = true;
+            } catch {}
         }
 
         // console.log('go from', me.x, me.y, 'to', target_x, target_y);
