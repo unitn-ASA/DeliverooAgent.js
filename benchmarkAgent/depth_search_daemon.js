@@ -27,7 +27,7 @@ export default function ( /**@type {DeliverooApi}*/client ) {
     client.onNotTile( ( x, y ) => {
         if ( ! map.has(x) )
             map.set(x, new Map())    
-        map.get(x).delete(y)
+        map.get(x).set(y, {x, y, blocked: true})
     } );
     
     var me = {};
@@ -38,11 +38,11 @@ export default function ( /**@type {DeliverooApi}*/client ) {
 
     const agents = new Map()
     client.onAgentsSensing( ( sensed_agents ) => {
-        for ( const {id, x, y} of sensed_agents ) {
-            agents.set(id, {x, y} );
+        for ( const {id, name, x, y, score} of sensed_agents ) {
+            agents.set(id, {id, x, y} );
         }
         for ( const [id, {x, y}] of agents.entries() ) {
-            if ( distance (me, {x, y}) < AGENTS_OBSERVATION_DISTANCE && ! sensed_agents.find( (sensed) => id != sensed.id ) )
+            if ( distance (me, {x, y}) < AGENTS_OBSERVATION_DISTANCE && ! sensed_agents.find( (sensed) => id == sensed.id ) )
             agents.delete(id);
         }
     } );
@@ -57,9 +57,8 @@ export default function ( /**@type {DeliverooApi}*/client ) {
         for ( const {id, x, y} of agents.values() ) {
             try{
                 map.get(Math.ceil(x)).get(Math.ceil(y)).locked = true;
-            } catch {}
-            try{
                 map.get(Math.floor(x)).get(Math.floor(y)).locked = true;
+                // console.log('planning aware of agent at', x, y)
             } catch {}
         }
 
@@ -67,7 +66,7 @@ export default function ( /**@type {DeliverooApi}*/client ) {
 
         function search (cost, x, y, previous_tile, action_from_previous) {
 
-            if( ! map.has(x) || ! map.get(x).has(y) || map.get(x).get(y).locked )
+            if( ! map.has(x) || ! map.get(x).has(y) || map.get(x).get(y).blocked || map.get(x).get(y).locked )
                 return false;
             
             const tile = map.get(x).get(y)

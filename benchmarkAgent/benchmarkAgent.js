@@ -94,13 +94,12 @@ function nearestDelivery({x, y}) {
 /**
  * Options generation and filtering function
  */
-client.onParcelsSensing( parcels => {
+sensingEmitter.on( "new_parcel", () => {
 
     // TODO revisit beliefset revision so to trigger option generation only in the case a new parcel is observed
 
     let carriedQty = me.carrying.size;
     let carriedReward = Array.from( me.carrying.values() ).reduce( (acc, parcel) => acc + parcel.reward, 0 )
-    let deliveryTile = nearestDelivery(me)
 
     /**
      * Options generation
@@ -110,44 +109,32 @@ client.onParcelsSensing( parcels => {
         if ( ! parcel.carriedBy )
             options.push( [ 'go_pick_up', parcel.x, parcel.y, parcel.id, parcel.reward ] );
     }
-    if ( carriedReward > 0 ) {
-        options.push( [ 'go_deliver', deliveryTile.x, deliveryTile.y ] );
+    if ( carriedReward > 0 || parcels.size > 0 ) {
+        options.push( [ 'go_deliver' ] );
     }
     
-    /**
-     * Options filtering
-     */
-    let best_option;
-    let best_final_reward = 0; // parcel value - cost for pick up - cost for delivery  //Number.MAX_VALUE;
-    for (const option of options) {
+    function reward (option) {
         if ( option[0] == 'go_deliver' ) {
-            let [go_pick_up,x,y] = option;
-            let current_reward = carriedReward - carriedQty * MOVEMENT_DURATION/PARCEL_DECADING_INTERVAL * distance( me, deliveryTile ); // carried parcels value - cost for delivery
-            if ( current_reward > best_final_reward ) {
-                best_option = option;
-                best_final_reward = current_reward;
-            }
+            let deliveryTile = nearestDelivery(me)
+            return carriedReward - carriedQty * MOVEMENT_DURATION/PARCEL_DECADING_INTERVAL * distance( me, deliveryTile ); // carried parcels value - cost for delivery
         }
-        if ( option[0] == 'go_pick_up' ) {
+        else if ( option[0] == 'go_pick_up' ) {
             let [go_pick_up,x,y,id,reward] = option;
-            deliveryTile = nearestDelivery({x, y});
-            let current_reward = carriedReward + reward - (carriedQty+1) * MOVEMENT_DURATION/PARCEL_DECADING_INTERVAL * (distance( {x, y}, me ) + distance( {x, y}, deliveryTile ) ); // parcel value - cost for pick up - cost for delivery
-            if ( current_reward > best_final_reward ) {
-                best_option = option;
-                best_final_reward = current_reward;
-            }
+            let deliveryTile = nearestDelivery({x, y});
+            return carriedReward + reward - (carriedQty+1) * MOVEMENT_DURATION/PARCEL_DECADING_INTERVAL * (distance( {x, y}, me ) + distance( {x, y}, deliveryTile ) ); // parcel value - cost for pick up - cost for delivery
         }
     }
-
     /**
-     * Best option is selected
+     * Options filtering / sorting
      */
-    if ( best_option )
-        myAgent.push( best_option )
+
+    options.sort( (o1, o2) => reward(o1)-reward(o2) )
+
+    for (const opt of options) {
+        myAgent.push( opt )
+    }
 
 } )
-// client.onAgentsSensing( agentLoop )
-// client.onYou( agentLoop )
 
 
 
@@ -310,17 +297,22 @@ class GoPickUp extends Plan {
 
 class GoDeliver extends Plan {
 
-    static isApplicableTo ( go_deliver, x, y ) {
+    static isApplicableTo ( go_deliver ) {
         return go_deliver == 'go_deliver';
     }
 
-    async execute ( go_deliver, x, y ) {
+    async execute ( go_deliver ) {
+
+        let deliveryTile = nearestDelivery( me );
+
+        await this.subIntention( ['go_to', deliveryTile.x, deliveryTile.y] );
         if ( this.stopped ) throw ['stopped']; // if stopped then quit
-        await this.subIntention( ['go_to', x, y] );
-        if ( this.stopped ) throw ['stopped']; // if stopped then quit
+
         await client.putdown()
         if ( this.stopped ) throw ['stopped']; // if stopped then quit
+
         return true;
+
     }
 
 }
@@ -350,34 +342,39 @@ class DepthSearchMove extends Plan {
     }
 
     async execute ( go_to, x, y ) {
+        
+        this.log( 'DepthSearchMove', 'from',  me.x, me.y, 'to', {x, y} );
+        
+        while ( me.x != x && me.y != y ) {
 
-        this.log( 'DepthSearchMove', 'depth_search',  me.x, me.y, {x, y} )
-        const plan = depth_search(me, {x, y})
+            const plan = depth_search(me, {x, y})
+    
+            client.socket.emit( "path", plan.map( step => step.current ) );
 
-        client.socket.emit( "path", plan.map( step => step.current ) );
-
-        for ( const step of plan ) {
-
-            if ( this.stopped ) throw ['stopped']; // if stopped then quit
+            if ( plan.length == 0 ) {
+                throw 'target not reachable';
+            }
+    
+            for ( const step of plan ) {
+    
+                if ( this.stopped ) throw ['stopped']; // if stopped then quit
+                
+                const status = await client.move( step.action )
+    
+                if ( status ) {
+                    me.x = status.x;
+                    me.y = status.y;
+                }
+                else {
+                    this.log( 'DepthSearchMove replanning', 'from',  me.x, me.y, 'to', {x, y} );
+                    break;
+                }
+    
+            }
             
-            const status = await client.move( step.action )
-
-            if ( status ) {
-                me.x = status.x;
-                me.y = status.y;
-            }
-            else {
-                // this.log('stucked');
-                throw 'stucked';
-            }
-
         }
-        
-        if ( me.x == x && me.y == y ) {
-            return true;
-        }
-        
-        throw 'target not reached';
+
+        return true;
 
     }
 }
@@ -462,14 +459,22 @@ class IntentionRevision {
         return this.#intention_queue;
     }
 
+    currentIntention;
+
+    stopCurrent () {
+        if ( this.currentIntention )
+            this.currentIntention.stop();
+    }
+
     async loop ( ) {
         while ( true ) {
             // Consumes intention_queue if not empty
             if ( this.intention_queue.length > 0 ) {
-                console.log( 'intentionRevision.loop', this.intention_queue.map(i=>i.predicate) );
+                console.log( 'intentionRevision.loop', this.intention_queue );
             
                 // Current intention
-                const intention = this.intention_queue[0];
+                const predicate = this.intention_queue.shift();
+                const intention = this.currentIntention = new Intention( this, predicate );
                 
                 // Is queued intention still valid? Do I still want to achieve it?
                 // TODO this hard-coded implementation is an example
@@ -478,10 +483,6 @@ class IntentionRevision {
                     let p = parcels.get(id)
                     if ( p && p.carriedBy ) {
                         console.log( 'Skipping intention because no more valid', intention.predicate );
-
-                        // Remove from the queue
-                        this.intention_queue.shift();
-                        
                         continue;
                     }
                 }
@@ -494,12 +495,11 @@ class IntentionRevision {
                         console.error( 'Failed intention', ...intention.predicate, 'with error:', error )
                 } );
 
-                // Remove from the queue
-                this.intention_queue.shift();
             }
             else {
                 this.push( this.idle );
             }
+
             // Postpone next iteration at setImmediate
             await new Promise( res => setImmediate( res ) );
         }
@@ -510,54 +510,25 @@ class IntentionRevision {
     log ( ...args ) {
         console.log( ...args )
     }
-
-}
-
-class IntentionRevisionQueue extends IntentionRevision {
-
-    async push ( predicate ) {
-        
-        // Check if already queued
-        if ( this.intention_queue.find( (i) => i.predicate.join(' ') == predicate.join(' ') ) )
-            return; // intention is already queued
-
-        console.log( 'IntentionRevisionReplace.push', predicate );
-        const intention = new Intention( this, predicate );
-        this.intention_queue.push( intention );
-    }
-
-}
-
-class IntentionRevisionReplace extends IntentionRevision {
-
+    
     async push ( predicate ) {
 
-        // Check if already queued
-        const last = this.intention_queue.at( this.intention_queue.length - 1 );
-        if ( last && last.predicate.join(' ') == predicate.join(' ') ) {
-            return; // intention is already being achieved
-        }
+        // console.log( 'IntentionRevisionReplace.push', predicate );
+
+        // // Check if already queued
+        // if ( this.intention_queue.find( (p) => p.join(' ') == predicate.join(' ') ) )
+        //     return;
         
-        console.log( 'IntentionRevisionReplace.push', predicate );
-        const intention = new Intention( this, predicate );
-        this.intention_queue.push( intention );
+        // // Reschedule current
+        // if ( this.currentIntention )
+        //     this.intention_queue.unshift( this.currentIntention.predicate );
+
+        // Prioritize pushed one
+        this.intention_queue.unshift( predicate );
+
+        // Force current to stop
+        this.stopCurrent();
         
-        // Force current intention stop 
-        if ( last ) {
-            last.stop();
-        }
-    }
-
-}
-
-class IntentionRevisionRevise extends IntentionRevision {
-
-    async push ( predicate ) {
-        console.log( 'Revising intention queue. Received', ...predicate );
-        // TODO
-        // - order intentions based on utility function (reward - cost) (for example, parcel score minus distance)
-        // - eventually stop current one
-        // - evaluate validity of intention
     }
 
 }
@@ -567,7 +538,7 @@ class IntentionRevisionRevise extends IntentionRevision {
  */
 
 // const myAgent = new IntentionRevisionQueue();
-const myAgent = new IntentionRevisionReplace();
+const myAgent = new IntentionRevision();
 myAgent.idle = [ "patrolling" ];
 // const myAgent = new IntentionRevisionRevise();
 myAgent.loop();
