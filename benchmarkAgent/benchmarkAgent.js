@@ -354,6 +354,8 @@ class DepthSearchMove extends Plan {
         this.log( 'DepthSearchMove', 'depth_search',  me.x, me.y, {x, y} )
         const plan = depth_search(me, {x, y})
 
+        client.socket.emit( "path", plan.map( step => step.current ) );
+
         for ( const step of plan ) {
 
             if ( this.stopped ) throw ['stopped']; // if stopped then quit
