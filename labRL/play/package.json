@@ -4,7 +4,7 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "build": "cross-env NODE_ENV=production parcel build --no-scope-hoist index.html --public-url ./",
+    "build": "cross-env NODE_ENV=production parcel build index.html --public-url ./",
     "start": "mkdir -p dist && cp -r ../train/models/dqn dist/dqn && cross-env NODE_ENV=development parcel index.html --no-hmr --open"
   },
   "author": "",
@@ -17,5 +17,8 @@
   },
   "dependencies": {
     "@tensorflow/tfjs": "^3.18.0"
+  },
+  "resolutions": {
+    "node-fetch": "2.6.7"
   }
 }

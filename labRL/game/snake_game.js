@@ -197,33 +197,34 @@ export class SnakeGame {
     
     let done = false;
     let reward = MOVE_REWARD;
-    let msg = this.frameCount;
+    let exit_status = "running";
 
     if ( this.x > this.width - 1 || this.y > this.height - 1 || this.x < 0 || this.y < 0 ) {
       done = true;
       reward = OBSTACLE_REWARD;
-      msg = "out_of_bounds";
+      exit_status = "out_of_bounds";
     }
     else if ( this.obstaclesLayer[ this.x ][ this.y ] == 1 ) {
       done = true;
       reward = OBSTACLE_REWARD;
-      msg = "hit_obstacle";
+      exit_status = "hit_obstacle";
     }
     else if ( this.frameCount > 100 ) {
       done = true;
-      msg = "timeout";
+      exit_status = "timeout";
     }
     else if ( this.x == this.goalX && this.y == this.goalY ) {
       done = true;
       reward = GOAL_REWARD;
-      msg = "goal_reached";
+      exit_status = "goal_reached";
     }
 
-    // process.stdout.write( `.` );
-    if ( done )
-      console.log( `${this.frameCount} ${msg}` );
+    // process.stdout.write( `${this.frameCount} ${exit_status = "goal_reached} \r` );
+    // if ( done ) {
+    //   console.log( '' );
+    // }
 
-    return { done, reward };
+    return { done, reward, exit_status };
   }
 
 }

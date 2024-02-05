@@ -45,6 +45,14 @@ class MovingAverager {
   average() {
     return this.buffer.reduce((x, prev) => x + prev) / this.buffer.length;
   }
+
+  sum() {
+    return this.buffer.reduce((x, prev) => x + prev);
+  }
+
+  count(fn) {
+    return this.buffer.filter(fn).length;
+  }
 }
 
 /**
@@ -73,40 +81,53 @@ export async function train(
     summaryWriter = tf.node.summaryFileWriter(logDir);
   }
 
+  // Warm up the replay buffer with random actions.
   for (let i = 0; i < agent.replayBufferSize; ++i) {
-    agent.playStep();
+    let {action, cumulativeReward, done} = agent.playStep();
+    process.stdout.write(`Warming up replay buffer... ${i}/${agent.replayBufferSize}\r`);
   }
+  console.log('');
 
   // Moving averager: cumulative reward across 100 most recent 100 episodes.
   const rewardAverager100 = new MovingAverager(100);
   // Moving averager: distance to goal across 100 most recent 100 episodes.
   const distanceAverager100 = new MovingAverager(100);
+  // Moving averager: goal_reached count across 100 most recent 100 episodes.
+  const goalReachedAverager100 = new MovingAverager(100);
 
   const optimizer = tf.train.adam(learningRate);
   let tPrev = new Date().getTime();
   let frameCountPrev = agent.frameCount;
   let averageReward100Best = -Infinity;
+  console.log('Training whenever game is done...');
   while (true) {
-    agent.trainOnReplayBatch(batchSize, gamma, optimizer);
-    const {cumulativeReward, done} = agent.playStep();
+    // agent.trainOnReplayBatch(batchSize, gamma, optimizer); // Train at every step
+    const {cumulativeReward, done, exit_status} = agent.playStep();
     if (done) {
+      agent.trainOnReplayBatch(batchSize, gamma, optimizer); // Train when game is done
       const t = new Date().getTime();
-      const framesPerSecond =
-          (agent.frameCount - frameCountPrev) / (t - tPrev) * 1e3;
+      const frames = agent.frameCount - frameCountPrev;
+      const framesPerSecond = frames / (t - tPrev) * 1e3;
       tPrev = t;
       frameCountPrev = agent.frameCount;
 
       rewardAverager100.append(cumulativeReward);
       distanceAverager100.append(agent.game.getManhattanDistance());
+      goalReachedAverager100.append(exit_status === 'goal_reached' ? 1 : 0);
       const averageReward100 = rewardAverager100.average();
       const averageDistance100 = distanceAverager100.average();
+      const averageGoalReached100 = goalReachedAverager100.sum();
 
       console.log(
           `Frame #${agent.frameCount}: ` +
           `avgReward100=${averageReward100.toFixed(1)}; ` +
           `avgDistanceToGoal100=${averageDistance100.toFixed(1)}; ` +
+          `wins100=${averageGoalReached100} ` +
           `(epsilon=${agent.epsilon.toFixed(3)}) ` +
-          `(${framesPerSecond.toFixed(1)} frames/s)`);
+          `(${framesPerSecond.toFixed(1).padStart(5, '0')} frames/s) ` +
+          `@${exit_status} #${frames.toString().padStart(3, '0')}`
+      );
+      
       if (summaryWriter != null) {
         summaryWriter.scalar(
             'cumulativeReward100', averageReward100, agent.frameCount);
@@ -182,7 +203,7 @@ export function parseArguments() {
   });
   parser.addArgument('--replayBufferSize', {
     type: 'int',
-    defaultValue: 1e4,
+    defaultValue: 1e2,
     help: 'Length of the replay memory buffer.'
   });
   parser.addArgument('--epsilonInit', {
@@ -203,7 +224,7 @@ export function parseArguments() {
   });
   parser.addArgument('--batchSize', {
     type: 'int',
-    defaultValue: 64,
+    defaultValue: 32,
     help: 'Batch size for DQN training.'
   });
   parser.addArgument('--gamma', {

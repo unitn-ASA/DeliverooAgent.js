@@ -74,7 +74,7 @@ export class ReplayMemory {
     for (let i = 0; i < batchSize; ++i) {
       let idx = this.bufferIndices_[i];
       let data = this.buffer[idx];
-      if ( data != null && data[0] != null ) {
+      if ( data != null ) {
         out.push(data);
       }
     }

@@ -4,7 +4,8 @@
   "description": "",
   "type": "module",
   "scripts": {
-    "train": "node train.js"
+    "train": "node train.js",
+    "train-gpu": "node train.js --gpu"
   },
   "author": "",
   "license": "ISC",

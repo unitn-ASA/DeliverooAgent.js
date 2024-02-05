@@ -97,7 +97,7 @@ export class SnakeGameAgent {
       });
     }
 
-    const {reward, done} = this.game.step(action);
+    const {reward, done, exit_status} = this.game.step(action);
     const nextState = this.game.getStateTensor();
     
     this.replayMemory.append([state, action, reward, done, nextState]);
@@ -107,7 +107,8 @@ export class SnakeGameAgent {
     const output = {
       action,
       cumulativeReward: this.cumulativeReward_,
-      done
+      done,
+      exit_status
     };
     if (done) {
       this.reset();
