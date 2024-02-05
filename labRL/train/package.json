@@ -17,5 +17,8 @@
     "shelljs": "^0.8.5",
     "tmp": "^0.0.33",
     "yalc": "~1.0.0-pre.53"
+  },
+  "dependencies": {
+    "@tensorflow/tfjs": "^3.18.0"
   }
 }

@@ -2,6 +2,7 @@
   "name": "play",
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "scripts": {
     "build": "cross-env NODE_ENV=production parcel build --no-scope-hoist index.html --public-url ./",
     "start": "mkdir -p dist && cp -r ../train/models/dqn dist/dqn && cross-env NODE_ENV=development parcel index.html --no-hmr --open"
@@ -15,6 +16,6 @@
     "process": "^0.11.10"
   },
   "dependencies": {
-    "@tensorflow/tfjs": "^4.17.0"
+    "@tensorflow/tfjs": "^3.18.0"
   }
 }
