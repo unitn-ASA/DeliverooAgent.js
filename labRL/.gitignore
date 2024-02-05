@@ -23,3 +23,11 @@ logs
 
 # binaries
 bin
+
+/models
+*/models
+*/*/models
+
+dist
+*/dist
+*/*/dist

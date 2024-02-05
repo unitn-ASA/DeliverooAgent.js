@@ -1,0 +1,21 @@
+{
+  "name": "labrl",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "train": "node train.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@tensorflow/tfjs-node": "^3.18.0",
+    "@tensorflow/tfjs-node-gpu": "^3.18.0",
+    "argparse": "^1.0.10",
+    "core-js": "^3.0.1",
+    "cross-env": "^5.1.6",
+    "shelljs": "^0.8.5",
+    "tmp": "^0.0.33",
+    "yalc": "~1.0.0-pre.53"
+  }
+}

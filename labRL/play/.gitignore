@@ -23,3 +23,7 @@ logs
 
 # binaries
 bin
+
+models
+dist
+.parcel-cache
