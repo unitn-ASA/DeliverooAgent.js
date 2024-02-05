@@ -141,7 +141,7 @@ export class SnakeGame {
       let goalX = Math.floor( Math.random() * this.width );
       let goalY = Math.floor( Math.random() * this.height );
       if ( this.obstaclesLayer[ goalX ][ goalY ] == 0 ) {
-        this.setGoal(goalX,this.goalY);
+        this.setGoal(goalX,goalY);
         break;
       }
     }
