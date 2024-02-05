@@ -32,20 +32,20 @@ export function createDeepQNetwork(h, w, numActions) {
 
   const model = tf.sequential();
   model.add(tf.layers.conv2d({
-    filters: 128,
-    kernelSize: 3,
+    filters: 256,
+    kernelSize: 4,
     strides: 1,
     activation: 'relu',
     inputShape: [3, w, h],
     dataFormat: ('channelsFirst')
   }));
-  model.add(tf.layers.batchNormalization());
-  model.add(tf.layers.conv2d({
-    filters: 256,
-    kernelSize: 3,
-    strides: 1,
-    activation: 'relu'
-  }));
+  // model.add(tf.layers.batchNormalization());
+  // model.add(tf.layers.conv2d({
+  //   filters: 128,
+  //   kernelSize: 4,
+  //   strides: 1,
+  //   activation: 'relu'
+  // }));
   // model.add(tf.layers.batchNormalization());
   // model.add(tf.layers.conv2d({
   //   filters: 256,
