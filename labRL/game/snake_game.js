@@ -161,7 +161,7 @@ export class SnakeGame {
    * @returns {tf.Tensor4D} The current state.
    */
   getStateTensor() {
-    return tf.tensor4d([ [ this.meLayer, this.goalLayer, this.obstaclesLayer ] ], [1, 3, this.width, this.height]);
+    return tf.tensor4d([ [ this.meLayer, this.goalLayer, this.obstaclesLayer ] ], [1, 3, this.width, this.height], 'bool');
   }
 
   getState() {

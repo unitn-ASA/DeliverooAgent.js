@@ -1,0 +1,25 @@
+{
+  "name": "demo",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "scripts": {
+    "build": "cross-env NODE_ENV=production parcel build index.html --no-scope-hoist --public-url ./",
+    "start": "mkdir -p dist && cp -r ../train/models/dqn dist/dqn && cross-env NODE_ENV=development parcel index.html --no-hmr --open"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "buffer": "^6.0.3",
+    "cross-env": "^5.1.6",
+    "parcel": "^2.11.0",
+    "process": "^0.11.10"
+  },
+  "dependencies": {
+    "@tensorflow/tfjs": "^3.18.0",
+    "@tensorflow/tfjs-core": "^3.18.0"
+  },
+  "resolutions": {
+    "node-fetch": "2.6.7"
+  }
+}

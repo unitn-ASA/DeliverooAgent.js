@@ -22,6 +22,11 @@ import {getRandomAction, SnakeGame, NUM_ACTIONS, ALL_ACTIONS} from '../game/snak
 import {ReplayMemory} from './replay_memory.js';
 import { assertPositiveInteger } from './utils.js';
 
+/**
+ * Agent for playing the snake game.
+ * @property {tf.Model} onlineNetwork The online DQN (Deep Q-Network) model.
+ * @property {tf.Model} targetNetwork The target DQN model.
+ */
 export class SnakeGameAgent {
   /**
    * Constructor of SnakeGameAgent.
@@ -51,9 +56,9 @@ export class SnakeGameAgent {
         this.epsilonDecayFrames;
 
     this.onlineNetwork =
-        createDeepQNetwork(game.height,  game.width, NUM_ACTIONS);
+        createDeepQNetwork(game.width, game.height, NUM_ACTIONS);
     this.targetNetwork =
-        createDeepQNetwork(game.height,  game.width, NUM_ACTIONS);
+        createDeepQNetwork(game.width, game.height, NUM_ACTIONS);
     // Freeze taget network: it's weights are updated only through copying from
     // the online network.
     this.targetNetwork.trainable = false;

@@ -17,12 +17,12 @@
 
 import * as tf from '@tensorflow/tfjs';
 
-export function createDeepQNetwork(h, w, numActions) {
-  if (!(Number.isInteger(h) && h > 0)) {
-    throw new Error(`Expected height to be a positive integer, but got ${h}`);
-  }
+export function createDeepQNetwork(w, h, numActions) {
   if (!(Number.isInteger(w) && w > 0)) {
     throw new Error(`Expected width to be a positive integer, but got ${w}`);
+  }
+  if (!(Number.isInteger(h) && h > 0)) {
+    throw new Error(`Expected height to be a positive integer, but got ${h}`);
   }
   if (!(Number.isInteger(numActions) && numActions > 1)) {
     throw new Error(
@@ -32,7 +32,7 @@ export function createDeepQNetwork(h, w, numActions) {
 
   const model = tf.sequential();
   model.add(tf.layers.conv2d({
-    filters: 256,
+    filters: 64,
     kernelSize: 4,
     strides: 1,
     activation: 'relu',
@@ -41,14 +41,14 @@ export function createDeepQNetwork(h, w, numActions) {
   }));
   // model.add(tf.layers.batchNormalization());
   // model.add(tf.layers.conv2d({
-  //   filters: 128,
+  //   filters: 256,
   //   kernelSize: 4,
   //   strides: 1,
   //   activation: 'relu'
   // }));
   // model.add(tf.layers.batchNormalization());
   // model.add(tf.layers.conv2d({
-  //   filters: 256,
+  //   filters: 64,
   //   kernelSize: 3,
   //   strides: 1,
   //   activation: 'relu'
@@ -57,7 +57,7 @@ export function createDeepQNetwork(h, w, numActions) {
   model.add(tf.layers.dense({units: 100, activation: 'relu'}));
   model.add(tf.layers.dropout({rate: 0.25}));
   model.add(tf.layers.dense({units: numActions}));
-
+  
   return model;
 }
 

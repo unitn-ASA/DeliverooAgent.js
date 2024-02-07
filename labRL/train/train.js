@@ -23,6 +23,7 @@ const {mkdir} = shelljs;
 
 // The value of tf (TensorFlow.js-Node module) will be set dynamically
 // depending on the value of the --gpu flag below.
+/** @type {typeof import('@tensorflow/tfjs-node')} */
 let tf;
 
 import {SnakeGameAgent} from './agent.js';
@@ -79,6 +80,15 @@ export async function train(
   let summaryWriter;
   if (logDir != null) {
     summaryWriter = tf.node.summaryFileWriter(logDir);
+  }
+
+  // Load saved model if it exists and copy weights to the agent's networks.
+  if (fs.existsSync(savePath+'/model.json')) {
+    const handler = tf.io.fileSystem(savePath+'/model.json');
+    const qNet = await tf.loadLayersModel(handler);
+    copyWeights(agent.targetNetwork, qNet);
+    copyWeights(agent.onlineNetwork, qNet);
+    console.log(`Loaded DQN from ${savePath}`);
   }
 
   // Warm up the replay buffer with random actions.
@@ -224,7 +234,7 @@ export function parseArguments() {
   });
   parser.addArgument('--batchSize', {
     type: 'int',
-    defaultValue: 32,
+    defaultValue: 64,
     help: 'Batch size for DQN training.'
   });
   parser.addArgument('--gamma', {

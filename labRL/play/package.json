@@ -1,24 +1,17 @@
 {
   "name": "play",
   "version": "1.0.0",
-  "description": "",
+  "description": "A deliveroo.js client agent that plays using the DQN pre-trained model",
   "type": "module",
   "scripts": {
-    "build": "cross-env NODE_ENV=production parcel build index.html --public-url ./",
-    "start": "mkdir -p dist && cp -r ../train/models/dqn dist/dqn && cross-env NODE_ENV=development parcel index.html --no-hmr --open"
+    "start": "cp -r ../train/models/dqn . && node play.js --name=dqn"
   },
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "buffer": "^6.0.3",
-    "cross-env": "^5.1.6",
-    "parcel": "^2.11.0",
-    "process": "^0.11.10"
-  },
   "dependencies": {
-    "@tensorflow/tfjs": "^3.18.0"
-  },
-  "resolutions": {
-    "node-fetch": "2.6.7"
+    "@tensorflow/tfjs-node": "^3.18.0",
+    "@unitn-asa/deliveroo-js-client": "^0.0.31",
+    "canvas": "^2.11.2",
+    "socket.io-client": "^4.6.0"
   }
 }
