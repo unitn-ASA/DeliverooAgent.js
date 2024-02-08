@@ -130,12 +130,13 @@ export async function train(
 
       console.log(
           `Frame #${agent.frameCount}: ` +
-          `avgReward100=${averageReward100.toFixed(1)}; ` +
+          `avgReward100=${averageReward100.toFixed(1).padStart(4, ' ')}; ` +
           `avgDistanceToGoal100=${averageDistance100.toFixed(1)}; ` +
           `wins100=${averageGoalReached100} ` +
           `(epsilon=${agent.epsilon.toFixed(3)}) ` +
-          `(${framesPerSecond.toFixed(1).padStart(5, '0')} frames/s) ` +
-          `@${exit_status} #${frames.toString().padStart(3, '0')}`
+          `(${framesPerSecond.toFixed(1).padStart(5, ' ')} frames/s) ` +
+          // `@${exit_status} #${frames.toString().padStart(3, '0')} ` +
+          `numTensors=${tf.memory().numTensors}`
       );
       
       if (summaryWriter != null) {
@@ -207,7 +208,7 @@ export function parseArguments() {
   });
   parser.addArgument('--maxNumFrames', {
     type: 'float',
-    defaultValue: 1e6,
+    defaultValue: 1e8,
     help: 'Maximum number of frames to run durnig the training. ' +
     'Training ends immediately when this frame count is reached.'
   });
