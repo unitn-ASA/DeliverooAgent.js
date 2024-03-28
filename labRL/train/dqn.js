@@ -41,7 +41,7 @@ export function createDeepQNetwork(w, h, numActions) {
   }));
   // model.add(tf.layers.batchNormalization());
   // model.add(tf.layers.conv2d({
-  //   filters: 256,
+  //   filters: 64,
   //   kernelSize: 4,
   //   strides: 1,
   //   activation: 'relu'

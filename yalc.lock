@@ -1,0 +1,11 @@
+{
+  "version": "v1",
+  "packages": {
+    "@unitn-asa/deliveroo-js-client": {
+      "version": "1.6.0",
+      "signature": "e7a4f078cc6e76dd01389a7af460f0e8",
+      "file": true,
+      "replaced": "^0.0.31"
+    }
+  }
+}

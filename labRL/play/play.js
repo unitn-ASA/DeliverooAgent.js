@@ -15,7 +15,8 @@ import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
 
 const client = new DeliverooApi(
   'http://localhost:8080',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijk3ODg1YjU2NjViIiwibmFtZSI6ImRxbiIsImlhdCI6MTcwNzI1NTM5NH0.n49mjQxeyqrfYETafbyWn1I46D_tK4QSgd9KuYtcyvo'
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImUyNmY1Y2NmYTNhIiwibmFtZSI6ImdvZCIsImlhdCI6MTcwODAxMzcxOX0.BbUbNZqLBS168A4WtDLcrPqRqkhHfrU-MP5uoZ6aUvc',
+  '1ec8cd',
 );
 
 const LOCAL_MODEL_URL = './dqn/model.json';
@@ -52,7 +53,9 @@ client.onYou( async ( me ) => {
   layerArrayMe[ x ][ y ] = 0;
   x = Math.ceil( me.x );
   y = Math.ceil( me.y );
-  layerArrayMe[ x ][ y ] = 1;
+  try {
+    layerArrayMe[ x ][ y ] = 1;
+  } catch (e) {}
   // layerTensorMe = tf.tensor2d(  layerArrayMe, [ width, height ] );
 } );
 
@@ -107,9 +110,8 @@ async function loadDqnModel () {
   // Start playing
   while (true) {
     await step(qNet);
-    // await new Promise(resolve => setTimeout(resolve, 500));
+    // await new Promise(resolve => setTimeout(resolve, 100));
     sendImage(width, height, [layerArrayMe, layerArrayParcels, layerArrayObstacles]);
-    await new Promise(resolve => setTimeout(resolve, 100));
   }
 
 }
@@ -134,6 +136,7 @@ let bestAction = 'left';
  */
 async function step(qNet) {
 
+  await client.pickup();
   // act and get back reward and done
   let ack;
   // if ( bestAction == 'pick' ) {
@@ -144,6 +147,12 @@ async function step(qNet) {
   // }
   // else {
     ack = await client.move( bestAction );
+    if ( ack && ack.hasOwnProperty( 'x' ) && ack.hasOwnProperty( 'y' ) ) {
+      layerArrayMe[ x ][ y ] = 0;
+      x = Math.ceil( ack.x );
+      y = Math.ceil( ack.y );
+      layerArrayMe[ x ][ y ] = 1;
+    }
   // }
   const reward = ack ? -1 : -10;
   const done = false;
