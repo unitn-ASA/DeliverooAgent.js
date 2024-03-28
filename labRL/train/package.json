@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "train": "node train.js --logDir /tmp/snake_logs",
-    "train-gpu": "node train.js --gpu --logDir /tmp/snake_logs --savePath ./models/dqn"
+    "train-gpu": "node train.js --gpu --logDir /tmp/snake_logs --savePath ./models/dqn",
+    "tensorboard": "tensorboard --logdir /tmp/snake_logs"
   },
   "author": "",
   "license": "ISC",
