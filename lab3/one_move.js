@@ -32,24 +32,6 @@ client.onParcelsSensing( async ( parcels ) => {
         .join( ' ' )
     console.log( pretty )
 
-    for (const p of parcels) {
-        db.set( p.id, p)
-        if ( distance(p, me) <= 1 ) {
-            if ( me.x + 1 == p.x )
-                await client.move('right')
-            else if ( me.x - 1 == p.x )
-                await client.move('left')
-            else if ( me.y + 1 == p.y )
-                await client.move('up')
-            else if ( me.y - 1 == p.y )
-                await client.move('down')
-            client.pickup()
-        }
-
-    }
-    
-    console.log( db )
-
 } )
 
 

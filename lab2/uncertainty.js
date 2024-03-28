@@ -40,40 +40,7 @@ client.onAgentsSensing( ( agents ) => {
         // I meet someone for the first time
         if ( ! db.has( a.id) ) {
 
-            db.set( a.id, [a] )
-            console.log( 'Hello', a.name )
-
         } else { // I remember him
-
-            // this is everything I know about him
-            const history = db.get( a.id )
-
-            // this is about the last time I saw him
-            const last = history[history.length-1]
-            const second_last = (history.length>2 ? history[history.length-2] : 'no knowledge')
-            
-            if ( last != 'lost' ) { // I was seeing him also last time
-
-                if ( last.x != a.x || last.y != a.y ) { // But he moved
-                
-                    history.push( a )
-                    console.log( 'I\'m seeing you moving', a.name )
-                
-                } else { // Still here but not moving
-
-                }                
-
-            } else { // I see him again after some time
-                
-                history.push( a )
-
-                if ( second_last.x != a.x || second_last.y != a.y ) {
-                    console.log( 'Welcome back, seems that you moved', a.name )
-                } else {
-                    console.log( 'Welcome back, seems you are still here as before', a.name )
-                }
-
-            }
 
         }
 
@@ -86,24 +53,7 @@ client.onAgentsSensing( ( agents ) => {
 
         if ( ! agents.map( a=>a.id ).includes( id ) ) {
             // If I am not seeing him anymore
-            
-            if ( last != 'lost' ) {
-                // Just went off
 
-                history.push( 'lost' );
-                console.log( 'Bye', last.name );
-
-            } else {
-                // A while since last time I saw him
-
-                console.log( 'Its a while that I don\'t see', second_last.name, 'I remember him in', second_last.x, second_last.y );
-                
-                if ( distance(me, second_last) <= 3 ) {
-                    console.log( 'I remember', second_last.name, 'was within 3 tiles from here. Forget him.' );
-                    db.delete(id)
-                }
-
-            }
 
         } else { // If I am still seing him ... see above
             // console.log( 'still seing him', last.name )

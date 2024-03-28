@@ -47,34 +47,4 @@ console.log('go from', me.x, me.y, 'to', target_x, target_y);
 
 while ( me.x != target_x || me.y != target_y ) {
 
-    let status_x = undefined;
-    let status_y = undefined;
-
-    if ( target_x > me.x )
-        status_x = await client.move('right')
-    else if ( target_x < me.x )
-        status_x = await client.move('left')
-
-    if (status_x) {
-        me.x = status_x.x;
-        me.y = status_x.y;
-    }
-
-    if ( target_y > me.y )
-        status_y = await client.move('up')
-    else if ( target_y < me.y )
-        status_y = await client.move('down')
-
-    if (status_y) {
-        me.x = status_y.x;
-        me.y = status_y.y;
-    }
-    
-    if ( ! status_x && ! status_y) {
-        console.log('stucked')
-        break;
-    } else if ( me.x == target_x && me.y == target_y ) {
-        console.log('target reached')
-    }
-    
 }
