@@ -1,18 +1,17 @@
+# Implementing the BDI control loop
 
-Lab 04/04/2023
 
-
-# one_move.js
+## `one_move.js`
 Implement an agent that:
 - when 1 tile away from a parcel, reactively moves on the parcel tile and pick it up
 
 
-# blind_move.js
+## `blind_move.js`
 Implement an agent that:
 - moves in the direction of a given target, moving alternatively on x and y in the direction of the target
 
 
-# blind_pick.js
+## `blind_pick.js`
 Implement an agent that:
 - combines the two from above
 - when a parcel is perceived, reactively moves toward it and then pick it up

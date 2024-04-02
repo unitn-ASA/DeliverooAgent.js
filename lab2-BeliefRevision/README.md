@@ -1,17 +1,18 @@
-Lab 29/03/2023
+# More on Belief Revision
 
-
-# no_memory.js
+## `no_memory.js`
 Implement an agent that:
-- perceive agents and overwrite previously perceived agents beliefset
+- perceive other agents and overwrite previously perceived agents beliefset
+- print all perceived agents as `${name}(${x},${y})`
 
 
-# memory.js
+## `memory.js`
 Implement an agent that:
 - perceive agents and create a new entry in the beliefset including the timestamp about perceiving time
+- print, for each perceived agent, perception history as `${id}@${Date.now()-start}:${x},${y} @${previousTime}:${x},${y} ...`
 
 
-# uncertainty.js
+## `uncertainty.js`
 Implement belief revision so that:
 - say Hello to agents that are met for the first time:
     `console.log( 'Hello', a.name )`
