@@ -1,8 +1,8 @@
 import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
 
 const client = new DeliverooApi(
-    'http://localhost:8080',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA5ZmQ2NDllNzZlIiwibmFtZSI6Im1hcmNvIiwiaWF0IjoxNjc5OTk3Njg2fQ.6_zmgL_C_9QgoOX923ESvrv2i2_1bgL_cWjMw4M7ah4'
+    'https://deliveroojs.onrender.com',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjMwNmI5MTZkZWYwIiwibmFtZSI6Im1hcmNvIiwiaWF0IjoxNjk2OTM5OTQyfQ.oILtKDtT-CjZxdnNYOEAB7F_zjstNzUVCxUWphx9Suw'
 )
 
 function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
@@ -43,14 +43,36 @@ function agentLoop() {
     /**
      * Options
      */
+    const options = [];
+    for ( const [id, parcel] of parcels.entries() ) {
+        if ( parcel.carriedBy ) continue;
+        options.push( {
+            desire: 'go_pick_up',
+            args: [parcel]
+        } );
+    }
 
     /**
      * Select best intention
      */
+    let best_option;
+    let nearest_distance = Number.MAX_VALUE;
+    for ( const option of options ) {
+        if ( option.desire != 'go_pick_up' ) continue;
+        let parcel = option.args[0];
+        const distance_to_option = distance( me, parcel );
+        if ( distance_to_option < nearest_distance ) {
+            best_option = option;
+            nearest_distance = distance_to_option;
+        }
+    }
+
 
     /**
      * Revise/queue intention 
      */
+    if ( best_option ) {
+        myAgent.queue( best_option.desire, ...best_option.args );
 
 }
 client.onParcelsSensing( agentLoop )
@@ -76,7 +98,6 @@ class Agent {
     }
 
     async queue ( desire, ...args ) {
-        const last = this.intention_queue.at( this.intention_queue.length - 1 );
         const current = new Intention( desire, ...args )
         this.intention_queue.push( current );
     }
@@ -133,6 +154,34 @@ class Intention extends Promise {
 
     #started = false;
     async achieve () {
+        if ( this.#started )
+            return this;
+        this.#started = true;
+
+        /**
+         * Plan selection
+         */
+        let best_plan;
+        let best_plan_score = Number.MIN_VALUE;
+        for ( const plan of plans ) {
+            if ( plan.isApplicableTo( this.#desire ) ) {
+                this.#current_plan = plan;
+                console.log( 'achieving desire', this.#desire, ...this.#args,
+                    'with plan', plan
+                );
+                try {
+                    const result = await plan.execute( ...this.#args );
+                    this.#resolve( result );
+                    console.log( 'plan', plan, 'succesfully achieved intention',
+                        this.#desire, ...this.#args);
+                } catch (error) {
+                    console.log( 'plan', plan, 'failed to achieve intention',
+                        this.#desire, ...this.#args
+                    );
+                    this.#reject( e );
+                }
+            }
+        }
     }
 
 }
@@ -164,9 +213,13 @@ class Plan {
 class GoPickUp extends Plan {
 
     isApplicableTo ( desire ) {
+        return desire == 'go_pick_up';
     }
 
     async execute ( {x, y} ) {
+        // TODO move to x, y
+        await this.subIntention( 'go_to', {x, y} );
+        await client.pickup();
     }
 
 }
@@ -174,9 +227,15 @@ class GoPickUp extends Plan {
 class BlindMove extends Plan {
 
     isApplicableTo ( desire ) {
+        return desire == 'go_to';
     }
 
     async execute ( {x, y} ) {
+        while ( me.x != x || me.y != y ) {
+            const dx = x - me.x;
+            const dy = y - me.y;
+            // TODO move right left up or down
+        }
 
     }
 }

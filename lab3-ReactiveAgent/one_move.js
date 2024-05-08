@@ -1,8 +1,8 @@
 import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
 
 const client = new DeliverooApi(
-    'http://localhost:8080',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA5ZmQ2NDllNzZlIiwibmFtZSI6Im1hcmNvIiwiaWF0IjoxNjc5OTk3Njg2fQ.6_zmgL_C_9QgoOX923ESvrv2i2_1bgL_cWjMw4M7ah4'
+    'https://deliveroojs.onrender.com',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjMwNmI5MTZkZWYwIiwibmFtZSI6Im1hcmNvIiwiaWF0IjoxNjk2OTM5OTQyfQ.oILtKDtT-CjZxdnNYOEAB7F_zjstNzUVCxUWphx9Suw'
 )
 
 function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
@@ -25,12 +25,25 @@ const db = new Map()
 
 client.onParcelsSensing( async ( parcels ) => {
     
-    const pretty = Array.from(parcels)
-        .map( ( {id,x,y,carriedBy,reward} ) => {
-            return reward; //`(${x},${y},${reward})`
-        } )
+    console.log( `me(${me.x},${me.y})`,
+        parcels
+        .map( p => `${p.reward}@(${p.x},${p.y})` )
         .join( ' ' )
-    console.log( pretty )
+    );
+
+    for ( let p of parcels ) {
+        if ( ! p.carriedBy ) {
+            if ( me.x < p.x )
+                await client.move('right');
+            else if ( me.x > p.x )
+                await client.move('left')
+            else if ( me.y < p.y )
+                await client.move('up')
+            else if ( me.y > p.y )
+                await client.move('down')
+            client.pickup();
+        }
+    }
 
 } )
 

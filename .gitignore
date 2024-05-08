@@ -1,8 +1,5 @@
 # Dependency directories
-node_modules/
-*/node_modules/
-*/*/node_modules/
-*/*/*/node_modules/
+**/node_modules/
 
 # IDE
 .vscode
@@ -25,8 +22,6 @@ logs
 bin
 
 
-.DS_Store
-*/.DS_Store
-*/*/DS_Store
+**/.DS_Store
 
 .yalc
