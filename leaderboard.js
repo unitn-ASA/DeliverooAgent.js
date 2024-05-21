@@ -37,16 +37,14 @@ client.onAgentsSensing( ( sensed ) => {
         }
     }
 
-    console.log( );
     const sortedTeams = Array.from( teams.values() )
-    .sort( (a,b) => a.score - b.score ) // sort by score, lower to higher
-    .map( (team,index) => {
-        team.pti = index + 1;               // pti from 1 to n
-        console.log( team );
+    .sort( (a,b) => b.score - a.score ) // sort by score, higher to lower 
+    .map( (team,index,teams) => {
+        team.pti = teams.length - index;               // pti from n down to 1
         return team;
     } );
 
-    // console.log( sortedTeams );
+    console.log( 'Leaderboard:\n' + sortedTeams.map( (t,index) => `${index+1}°\t${t.pti} pti\t${t.teamName} (${t.score})` ).join( '\n' ) );
     
 } )
 
