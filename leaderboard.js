@@ -15,7 +15,7 @@ const client = new DeliverooApi(
  */
 const agents = new Map();
 /**
- * @type {Map<string,{teamName,score,pti:number}}
+ * @type {Map<string,{teamName,score,pti:number,agents:[{id,name,score}]}
  */
 const teams = new Map();
 
@@ -29,11 +29,13 @@ client.onAgentsSensing( ( sensed ) => {
     teams.clear();
     for ( let a of agents.values() ) {
         let teamName = a.name.split( '_' )[ 0 ];
+        let agentPostfix = a.name.split( '_' )[ 1 ];
 
         if ( ! teams.has( teamName ) ) {
-            teams.set( teamName, { teamName, score: a.score } );
+            teams.set( teamName, { teamName, score: a.score, agents:[a] } );
         } else {
             teams.get( teamName ).score += a.score;
+            teams.get( teamName ).agents.push( a );
         }
     }
 
@@ -44,7 +46,7 @@ client.onAgentsSensing( ( sensed ) => {
         return team;
     } );
 
-    console.log( 'Leaderboard:\n' + sortedTeams.map( (t,index) => `${index+1}°\t${t.pti} pti\t${t.teamName} (${t.score})` ).join( '\n' ) );
+    console.log( 'Leaderboard:\n' + sortedTeams.map( (t,index) => `${index+1}°\t${t.pti} pti\t${t.teamName} (${t.score})\t${t.agents.map(a=>`${a.name}(${a.score})`).join('\t')}` ).join( '\n' ) );
     
 } )
 
