@@ -15,8 +15,7 @@ import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
 
 const client = new DeliverooApi(
   'http://localhost:8080',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImUyNmY1Y2NmYTNhIiwibmFtZSI6ImdvZCIsImlhdCI6MTcwODAxMzcxOX0.BbUbNZqLBS168A4WtDLcrPqRqkhHfrU-MP5uoZ6aUvc',
-  '1ec8cd',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQ1OTBkNTA3MWI1IiwibmFtZSI6ImdvZCIsImlhdCI6MTcxNjkyNDcwNX0.-8ZdtFC9khWjQGITZ0Xm3aMVlUXtq3w2A6hU8emKk8I'
 );
 
 const LOCAL_MODEL_URL = './dqn/model.json';
@@ -62,21 +61,56 @@ client.onYou( async ( me ) => {
 
 
 var layerArrayParcels = Array.from({ length: width }, () => Array(height).fill(0));
-  client.onParcelsSensing( async (parcels) => {
-  let goal =  parcels[0];
+var goal = {x:0, y:0};
+client.onParcelsSensing( async (parcels) => {
+  
+  // filter parcels
+  parcels = parcels
+    // not carried
+    .filter( ({carriedBy}) => !carriedBy )
+    // sort by distance, closest first
+    .sort( (a,b) => {
+      let distA = Math.abs( a.x - x ) + Math.abs( a.y - y );
+      let distB = Math.abs( b.x - x ) + Math.abs( b.y - y );
+      return distA - distB;
+    } );
+  
+  // take the closest
+  if ( parcels.length > 0 )
+    goal = parcels[0]
+
   if ( goal && goal.x % 1 == 0 && goal.y % 1 == 0) {
+
+    // clear parcels
     for (let i = 0; i < width; i++) {
       for (let j = 0; j < height; j++) {
         layerArrayParcels[i][j] = 0;
       }
     }
-    // console.log( `Goal: ${goal.x},${goal.y}` );
+    // set goal
     layerArrayParcels[ goal.x ][ goal.y ] = 1;
+    // console.log( `Goal: ${goal.x},${goal.y}` );
   }
+
   // parcels.forEach( ({x,y}) => {
   //   layerArrayParcels[x][y] = 1;
   // } );
 } );
+
+
+function getLayers10x10 () {
+  let min_x = Math.max( x-5, 0 );
+  let min_y = Math.max( y-5, 0 );
+  let max_x = Math.min( min_x + 9, width - 1 );
+  let max_y = Math.min( min_y + 9, height - 1 );
+  min_x = max_x - 9;
+  min_y = max_y - 9;
+  return [
+    layerArrayMe.slice(min_x, max_x+1).map( row => row.slice(min_y, max_y+1) ),
+    layerArrayParcels.slice(min_x, max_x+1).map( row => row.slice(min_y, max_y+1) ),
+    layerArrayObstacles.slice(min_x, max_x+1).map( row => row.slice(min_y, max_y+1) )
+  ]
+}
 
 
 
@@ -84,7 +118,16 @@ function getStateTensor () {
   // console.log( 'layerArrayMe', layerArrayMe );
   // console.log( 'layerArrayParcels', layerArrayParcels.toString() );
   // console.log( 'layerArrayObstacles', layerArrayObstacles );
-  let tensor = tf.tensor4d( [[ layerArrayMe, layerArrayParcels, layerArrayObstacles ]], [ 1, 3, width, height ] );
+  let min_x = Math.min( x, goal.x );
+  let min_y = Math.min( y, goal.y );
+  let max_x = Math.min( min_x + 9, width-1 );
+  let max_y = Math.min( min_y + 9, height-1 );
+  min_x = max_x - 9;
+  min_y = max_y - 9;
+  let tensor = tf.tensor4d(
+    [ getLayers10x10() ],
+    [ 1, 3, 10, 10 ]
+  );
   return tensor;
 }
 
@@ -109,9 +152,10 @@ async function loadDqnModel () {
 
   // Start playing
   while (true) {
+    console.log('Step');
     await step(qNet);
     // await new Promise(resolve => setTimeout(resolve, 100));
-    sendImage(width, height, [layerArrayMe, layerArrayParcels, layerArrayObstacles]);
+    sendImage(10, 10, getLayers10x10());
   }
 
 }
