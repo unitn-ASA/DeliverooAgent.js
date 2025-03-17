@@ -20,8 +20,11 @@ Share your position and your observations with your team-mate.
 # 6
 Share your beliefset with your team-mate.
 
-# 7
+# 7pickup.js
+Coordinate on who is going to pickup a parcel
+
+# 8
 Coordinate so to cross a narrow and long corridor.
 
-# 7
+# 9
 Define different roles between the two of you and cooperate.

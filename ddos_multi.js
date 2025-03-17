@@ -4,7 +4,7 @@ import { spawn } from 'child_process';
 // Function to spawn child processes
 function spawnProcesses() {
     
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 60; i++) {
         const childProcess = spawn(
             'node ddos_one.js',
             { shell: true }
