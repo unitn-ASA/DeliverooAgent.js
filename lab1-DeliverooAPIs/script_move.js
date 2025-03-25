@@ -7,14 +7,14 @@ const client = new DeliverooApi(
 
 async function myFn () {
 
-    let up = await client.move('up');
-    let right = await client.move('right');
+    let up = await client.emitMove('up');
+    let right = await client.emitMove('right');
     
 }
 
 // myFn ()
 
-client.socket.on( 'tile', (x, y, delivery) => {
+client.on( 'tile', (x, y, delivery) => {
     console.log(x, y, delivery)
 } )
 

@@ -15,7 +15,7 @@
     "dotenv": "^16.0.3"
   },
   "dependencies": {
-    "@unitn-asa/deliveroo-js-client": "^0.0.37",
+    "@unitn-asa/deliveroo-js-client": "^2.0.2",
     "@unitn-asa/pddl-client": "^0.0.37",
     "node-fetch": "^3.3.0",
     "socket.io-client": "^4.6.0"

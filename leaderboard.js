@@ -1,13 +1,14 @@
 import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
 
 const client = new DeliverooApi(
+    'http://localhost:8080', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImEyNzhiOSIsIm5hbWUiOiJnb2QiLCJ0ZWFtSWQiOiJmODA0MWUiLCJ0ZWFtTmFtZSI6ImdvZCIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0MDA2NDUyM30.dyQHtNjjmmHd4OrXbfhi2CjMvISqdihrAQxxHkMLlmU'
     // 'http://localhost:8080/?name=ddos', ''
     // 'https://deliveroojs.onrender.com/?name=ddos', ''
     // 'http://rtibdi.disi.unitn.it:8080/?name=ddos', ''
 
-    'http://rtibdi.disi.unitn.it:8080',
+    // 'http://rtibdi.disi.unitn.it:8080',
     // god a7de10b05d1 @ http://rtibdi.disi.unitn.it:8080
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImE3ZGUxMGIwNWQxIiwibmFtZSI6ImdvZCIsImlhdCI6MTcxNTA3ODg2MX0.fB4OowVYwujN3miDWrPgvD35iY7QQW3cy6I8xLkK-ps'
+    // 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImE3ZGUxMGIwNWQxIiwibmFtZSI6ImdvZCIsImlhdCI6MTcxNTA3ODg2MX0.fB4OowVYwujN3miDWrPgvD35iY7QQW3cy6I8xLkK-ps'
 )
 
 /**
@@ -16,7 +17,7 @@ const client = new DeliverooApi(
 const agents = new Map();
 
 /**
- * @type {Map<string,{teamName,score,pti:number,agents:[{id,name,score}]}
+ * @type {Map<string,{teamName,score,pti:number,agents:[{id,name,score}]}}
  */
 const teams = new Map();
 

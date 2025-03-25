@@ -1,9 +1,9 @@
 import { default as config } from "./config.js";
-import { DeliverooApi, timer } from "@unitn-asa/deliveroo-js-client";
+import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
 
 const client = new DeliverooApi( config.host, config.token )
-client.onConnect( () => console.log( "socket", client.socket.id ) );
-client.onDisconnect( () => console.log( "disconnected", client.socket.id ) );
+// client.onConnect( () => console.log( "socket", client.socket.id ) );
+// client.onDisconnect( () => console.log( "disconnected", client.socket.id ) );
 
 async function agentLoop () {
 
@@ -11,9 +11,9 @@ async function agentLoop () {
 
     while ( true ) {
 
-        await client.putdown();
+        await client.emitPutdown();
 
-        await client.pickup();
+        await client.emitPickup();
 
         let tried = [];
 
@@ -27,7 +27,7 @@ async function agentLoop () {
             
             if ( ! tried.includes(current) ) {
                 
-                if ( await client.move( current ) ) {
+                if ( await client.emitMove( current ) ) {
                     console.log( 'moved', current );
                     previous = current;
                     break; // moved, continue
@@ -41,7 +41,7 @@ async function agentLoop () {
 
         if ( tried.length == 4 ) {
             console.log( 'stucked' );
-            await client.timer(1000); // stucked, wait 1 sec and retry
+            await new Promise(res=>setTimeout(res,1000)); // stucked, wait 1 sec and retry
         }
 
 

@@ -16,21 +16,19 @@ export default function ( /**@type {DeliverooApi}*/client ) {
     } );
     
     /**
-     * @type {Map<x,Map<y,{x,y,delivery}>}
+     * @typedef tile
+     * @type { { x: number, y: number, type: string, locked?: boolean, cost_to_here?: number, previous_tile?: tile, action_from_previous? } }
+     */
+    /**
+     * @type {Map<string, tile>}
      */
     const map = new Map()
-    client.onTile( ( x, y, delivery ) => {
-        if ( ! map.has(x) )
-            map.set(x, new Map())    
-        map.get(x).set(y, {x, y, delivery})
-    } );
-    client.onNotTile( ( x, y ) => {
-        if ( ! map.has(x) )
-            map.set(x, new Map())    
-        map.get(x).set(y, {x, y, blocked: true})
+    client.onTile( ( {x, y, type} ) => {
+        // console.log('map.set', x+'_'+y, {x, y, type})
+        map.set(x+'_'+y, {x, y, type})
     } );
     
-    var me = {};
+    var me = {x:undefined, y:undefined};
     client.onYou( ( {x, y} ) => {
         me.x = x;
         me.y = y;
@@ -56,8 +54,8 @@ export default function ( /**@type {DeliverooApi}*/client ) {
 
         for ( const {id, x, y} of agents.values() ) {
             try{
-                map.get(Math.ceil(x)).get(Math.ceil(y)).locked = true;
-                map.get(Math.floor(x)).get(Math.floor(y)).locked = true;
+                map.get(Math.ceil(x)+'_'+Math.ceil(y)).locked = true;
+                map.get(Math.floor(x)+'_'+Math.floor(y)).locked = true;
                 // console.log('planning aware of agent at', x, y)
             } catch {}
         }
@@ -66,10 +64,10 @@ export default function ( /**@type {DeliverooApi}*/client ) {
 
         function search (cost, x, y, previous_tile, action_from_previous) {
 
-            if( ! map.has(x) || ! map.get(x).has(y) || map.get(x).get(y).blocked || map.get(x).get(y).locked )
+            if( ! map.has(x+'_'+y) || map.get(x+'_'+y).type == '0' || map.get(x+'_'+y).locked )
                 return false;
             
-            const tile = map.get(x).get(y)
+            const tile = map.get(x+'_'+y)
             if( tile.cost_to_here <= cost)
                 return false;
             else {
@@ -108,7 +106,8 @@ export default function ( /**@type {DeliverooApi}*/client ) {
 
         search(0, init_x, init_y);
 
-        let dest = map.get(target_x).get(target_y);
+        // console.log('map.get', target_x+'_'+target_y, 'in', Array.from(map.values()).map( t => t.x+'_'+t.y ).join(', '))
+        let dest = map.get(target_x+'_'+target_y);
         
         const plan = [];
 
@@ -118,12 +117,12 @@ export default function ( /**@type {DeliverooApi}*/client ) {
             dest = dest.previous_tile;
         }
         
-        map.forEach( (map, x) => map.forEach( (tile, y) => {
+        map.forEach( (tile) => {
             delete tile.cost_to_here;
             delete tile.previous_tile;
             delete tile.action_from_previous;
             delete tile.locked;
-        } ) )
+        } )
 
         return plan;
 

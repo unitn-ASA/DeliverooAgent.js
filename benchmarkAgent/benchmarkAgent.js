@@ -2,6 +2,16 @@ import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
 import EventEmitter from "events";
 import depth_search_daemon from "./depth_search_daemon.js";
 
+/**
+ * @typedef me
+ * @type { { id: string, name: string, x: number, y: number, score: number, carrying: Map<string, parcel> } }
+ */
+
+/**
+ * @typedef parcel
+ * @type {import("@unitn-asa/deliveroo-js-client/types/ioTypedSocket.cjs").parcel}
+ */
+
 const client = new DeliverooApi(
     'http://localhost:8080',
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA5ZmQ2NDllNzZlIiwibmFtZSI6Im1hcmNvIiwiaWF0IjoxNjc5OTk3Njg2fQ.6_zmgL_C_9QgoOX923ESvrv2i2_1bgL_cWjMw4M7ah4'
@@ -23,7 +33,8 @@ function distance( {x:x1, y:y1}, {x:x2, y:y2} ) {
 /**
  * Beliefset revision function
  */
-const me = { carrying: new Map() };
+/** @type  {me } */
+const me = { id:undefined, name:undefined, x:undefined, y:undefined, score:undefined, carrying: new Map() };
 client.onYou( ( {id, name, x, y, score} ) => {
     me.id = id
     me.name = name
@@ -87,7 +98,7 @@ client.onTile( (x, y, delivery) => {
 } )
 
 function nearestDelivery({x, y}) {
-    return Array.from( map.tiles.values() ).filter( ({delivery}) => delivery ).sort( (a,b) => distance(a,{x, y})-distance(b,{x, y}) )[0]
+    return Array.from( map.tiles.values() ).filter( ({type}) => type==2 ).sort( (a,b) => distance(a,{x, y})-distance(b,{x, y}) )[0]
 }
 
 
@@ -288,7 +299,7 @@ class GoPickUp extends Plan {
         if ( this.stopped ) throw ['stopped']; // if stopped then quit
         await this.subIntention( ['go_to', x, y] );
         if ( this.stopped ) throw ['stopped']; // if stopped then quit
-        await client.pickup()
+        await client.emitPickup()
         if ( this.stopped ) throw ['stopped']; // if stopped then quit
         return true;
     }
@@ -308,7 +319,7 @@ class GoDeliver extends Plan {
         await this.subIntention( ['go_to', deliveryTile.x, deliveryTile.y] );
         if ( this.stopped ) throw ['stopped']; // if stopped then quit
 
-        await client.putdown()
+        await client.emitPutdown()
         if ( this.stopped ) throw ['stopped']; // if stopped then quit
 
         return true;
@@ -349,7 +360,7 @@ class DepthSearchMove extends Plan {
 
             const plan = depth_search(me, {x, y})
     
-            client.socket.emit( "path", plan.map( step => step.current ) );
+            // client.socket.emit( "path", plan.map( step => step.current ) );
 
             if ( plan.length == 0 ) {
                 throw 'target not reachable';
@@ -359,7 +370,7 @@ class DepthSearchMove extends Plan {
     
                 if ( this.stopped ) throw ['stopped']; // if stopped then quit
                 
-                const status = await client.move( step.action )
+                const status = await client.emitMove( step.action )
     
                 if ( status ) {
                     me.x = status.x;
@@ -391,16 +402,18 @@ class BlindMove extends Plan {
 
             if ( this.stopped ) throw ['stopped']; // if stopped then quit
 
+            /** @type {{x,y}|boolean} */
             let status_x = false;
+            /** @type {{x,y}|boolean} */
             let status_y = false;
             
             // this.log('me', me, 'xy', x, y);
 
             if ( x > me.x )
-                status_x = await client.move('right')
+                status_x = await client.emitMove('right')
                 // status_x = await this.subIntention( 'go_to', {x: me.x+1, y: me.y} );
             else if ( x < me.x )
-                status_x = await client.move('left')
+                status_x = await client.emitMove('left')
                 // status_x = await this.subIntention( 'go_to', {x: me.x-1, y: me.y} );
 
             if (status_x) {
@@ -411,10 +424,10 @@ class BlindMove extends Plan {
             if ( this.stopped ) throw ['stopped']; // if stopped then quit
 
             if ( y > me.y )
-                status_y = await client.move('up')
+                status_y = await client.emitMove('up')
                 // status_x = await this.subIntention( 'go_to', {x: me.x, y: me.y+1} );
             else if ( y < me.y )
-                status_y = await client.move('down')
+                status_y = await client.emitMove('down')
                 // status_x = await this.subIntention( 'go_to', {x: me.x, y: me.y-1} );
 
             if (status_y) {
