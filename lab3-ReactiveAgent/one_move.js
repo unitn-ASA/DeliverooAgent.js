@@ -1,8 +1,8 @@
 import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
 
 const client = new DeliverooApi(
-    'https://deliveroojs.onrender.com',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjMwNmI5MTZkZWYwIiwibmFtZSI6Im1hcmNvIiwiaWF0IjoxNjk2OTM5OTQyfQ.oILtKDtT-CjZxdnNYOEAB7F_zjstNzUVCxUWphx9Suw'
+    'https://deliveroojs25.azurewebsites.net',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJjOTQyMSIsIm5hbWUiOiJtYXJjbyIsInRlYW1JZCI6IjViMTVkMSIsInRlYW1OYW1lIjoiZGlzaSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzQyNTY3NDE4fQ.5m8St0OZo_DCXCriYkLtsguOm1e20-IAN2JNgXL7iUQ'
 )
 
 function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
@@ -34,14 +34,14 @@ client.onParcelsSensing( async ( parcels ) => {
     for ( let p of parcels ) {
         if ( ! p.carriedBy ) {
             if ( me.x < p.x )
-                await client.move('right');
+                await client.emitMove('right');
             else if ( me.x > p.x )
-                await client.move('left')
+                await client.emitMove('left')
             else if ( me.y < p.y )
-                await client.move('up')
+                await client.emitMove('up')
             else if ( me.y > p.y )
-                await client.move('down')
-            client.pickup();
+                await client.emitMove('down')
+            client.emitPickup();
         }
     }
 

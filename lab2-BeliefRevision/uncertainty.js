@@ -1,11 +1,11 @@
 import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
 
 const client = new DeliverooApi(
-    'https://deliveroojs.onrender.com',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjMwNmI5MTZkZWYwIiwibmFtZSI6Im1hcmNvIiwiaWF0IjoxNjk2OTM5OTQyfQ.oILtKDtT-CjZxdnNYOEAB7F_zjstNzUVCxUWphx9Suw'
+    'https://deliveroojs25.azurewebsites.net',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJjOTQyMSIsIm5hbWUiOiJtYXJjbyIsInRlYW1JZCI6IjViMTVkMSIsInRlYW1OYW1lIjoiZGlzaSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzQyNTY3NDE4fQ.5m8St0OZo_DCXCriYkLtsguOm1e20-IAN2JNgXL7iUQ'
 )
 
-/** @type {Map<string,[{id,x,y,carriedBy,reward}]} */
+/** @type {Map<string,[{id,name,x,y}|string]>} */
 const beliefset = new Map();
 const start = Date.now();
 var AOD; client.onConfig( config => AOD = config.AGENTS_OBSERVATION_DISTANCE );

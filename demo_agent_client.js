@@ -1,7 +1,9 @@
 import { default as config } from "./config.js";
 import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
 
-const client = new DeliverooApi( config.host, config.token )
+const client = new DeliverooApi(
+    'https://deliveroojs25.azurewebsites.net/?name=myagent'
+)
 // client.onConnect( () => console.log( "socket", client.socket.id ) );
 // client.onDisconnect( () => console.log( "disconnected", client.socket.id ) );
 
