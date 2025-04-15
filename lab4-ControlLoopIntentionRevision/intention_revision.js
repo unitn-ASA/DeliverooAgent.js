@@ -1,9 +1,9 @@
 import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
 
 const client = new DeliverooApi(
-    'https://deliveroojs25.azurewebsites.net',
+    // 'https://deliveroojs25.azurewebsites.net',
     // 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJjOTQyMSIsIm5hbWUiOiJtYXJjbyIsInRlYW1JZCI6IjViMTVkMSIsInRlYW1OYW1lIjoiZGlzaSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzQyNTY3NDE4fQ.5m8St0OZo_DCXCriYkLtsguOm1e20-IAN2JNgXL7iUQ'
-    // 'https://deliveroojs2.rtibdi.disi.unitn.it/',
+    'https://deliveroojs2.rtibdi.disi.unitn.it/',
     // 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQyNmQ1NyIsIm5hbWUiOiJtYXJjbyIsInRlYW1JZCI6ImM3ZjgwMCIsInRlYW1OYW1lIjoiZGlzaSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzQwMDA3NjIwfQ.1lfKRxSSwj3_a4fWnAV44U1koLrphwLkZ9yZnYQDoSw'
     // 'http://localhost:8080',
     // 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRiZDg3MyIsIm5hbWUiOiJtYXJjbyIsInRlYW1JZCI6IjA3ZmU2MiIsInRlYW1OYW1lIjoiZGlzaSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzM4NjAzNjMwfQ.Q9btNkm3VLXsZDsNHYsQm2nGUVfFnF-TWZrz4zPaWM4'
@@ -39,16 +39,13 @@ client.onYou( ( {id, name, x, y, score} ) => {
  */
 const parcels = new Map();
 
-client.onParcelsSensing( async ( perceived_parcels ) => {
-    for (const p of perceived_parcels) {
-        if ( parcels.has( p.id ) ) {
-            // update
-            parcels.set( p.id, p);
-        }
-        else {
-            // add
-            parcels.set( p.id, p);
-            // trigger options generation and filtering function ?
+client.onParcelsSensing( async ( pp ) => {
+    for (const p of pp) {
+        parcels.set( p.id, p);
+    }
+    for ( const p of parcels.values() ) {
+        if ( pp.map( p => p.id ).find( id => id == p.id ) == undefined ) {
+            parcels.delete( p.id );
         }
     }
 } )
