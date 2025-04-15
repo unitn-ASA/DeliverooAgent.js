@@ -1,9 +1,12 @@
 import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
 
 const client = new DeliverooApi(
-    'http://localhost:8080',''
-    // 'https://deliveroojs.onrender.com'
-    // 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjMwNmI5MTZkZWYwIiwibmFtZSI6Im1hcmNvIiwiaWF0IjoxNjk2OTM5OTQyfQ.oILtKDtT-CjZxdnNYOEAB7F_zjstNzUVCxUWphx9Suw'
+    'https://deliveroojs25.azurewebsites.net',
+    // 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJjOTQyMSIsIm5hbWUiOiJtYXJjbyIsInRlYW1JZCI6IjViMTVkMSIsInRlYW1OYW1lIjoiZGlzaSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzQyNTY3NDE4fQ.5m8St0OZo_DCXCriYkLtsguOm1e20-IAN2JNgXL7iUQ'
+    // 'https://deliveroojs2.rtibdi.disi.unitn.it/',
+    // 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQyNmQ1NyIsIm5hbWUiOiJtYXJjbyIsInRlYW1JZCI6ImM3ZjgwMCIsInRlYW1OYW1lIjoiZGlzaSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzQwMDA3NjIwfQ.1lfKRxSSwj3_a4fWnAV44U1koLrphwLkZ9yZnYQDoSw'
+    // 'http://localhost:8080',
+    // 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRiZDg3MyIsIm5hbWUiOiJtYXJjbyIsInRlYW1JZCI6IjA3ZmU2MiIsInRlYW1OYW1lIjoiZGlzaSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzM4NjAzNjMwfQ.Q9btNkm3VLXsZDsNHYsQm2nGUVfFnF-TWZrz4zPaWM4'
 )
 
 function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
@@ -15,9 +18,14 @@ function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
 
 
 /**
- * Beliefset revision function
+ * Belief revision
  */
-const me = {};
+
+/**
+ * @type { {id:string, name:string, x:number, y:number, score:number} }
+ */
+const me = {id: null, name: null, x: null, y: null, score: null};
+
 client.onYou( ( {id, name, x, y, score} ) => {
     me.id = id
     me.name = name
@@ -25,14 +33,24 @@ client.onYou( ( {id, name, x, y, score} ) => {
     me.y = y
     me.score = score
 } )
+
+/**
+ * @type { Map< string, {id: string, carriedBy?: string, x:number, y:number, reward:number} > }
+ */
 const parcels = new Map();
+
 client.onParcelsSensing( async ( perceived_parcels ) => {
     for (const p of perceived_parcels) {
-        parcels.set( p.id, p)
+        if ( parcels.has( p.id ) ) {
+            // update
+            parcels.set( p.id, p);
+        }
+        else {
+            // add
+            parcels.set( p.id, p);
+            // trigger options generation and filtering function ?
+        }
     }
-} )
-client.onConfig( (param) => {
-    // console.log(param);
 } )
 
 
@@ -40,7 +58,7 @@ client.onConfig( (param) => {
 /**
  * Options generation and filtering function
  */
-client.onParcelsSensing( parcels => {
+function optionsGeneration () {
 
     // TODO revisit beliefset revision so to trigger option generation only in the case a new parcel is observed
 
@@ -75,9 +93,26 @@ client.onParcelsSensing( parcels => {
     if ( best_option )
         myAgent.push( best_option )
 
-} )
-// client.onAgentsSensing( agentLoop )
-// client.onYou( agentLoop )
+}
+
+/**
+ * Generate options at every sensing event
+ */
+client.onParcelsSensing( optionsGeneration )
+client.onAgentsSensing( optionsGeneration )
+client.onYou( optionsGeneration )
+
+// /**
+//  * Alternatively, generate options continuously
+//  */
+// while (true) {
+//     if ( ! me.id || ! parcels.size ) {
+//         await new Promise( res => setTimeout( res, 100 ) );
+//         continue;
+//     }
+//     optionsGeneration();
+//     await new Promise( res => setTimeout( res ) );
+// }
 
 
 
@@ -218,11 +253,14 @@ class Intention {
     #parent;
 
     /**
-     * predicate is in the form ['go_to', x, y]
+     * @type { any[] } predicate is in the form ['go_to', x, y]
      */
     get predicate () {
         return this.#predicate;
     }
+    /**
+     * @type { any[] } predicate is in the form ['go_to', x, y]
+     */
     #predicate;
 
     constructor ( parent, predicate ) {
@@ -257,7 +295,7 @@ class Intention {
             // if plan is 'statically' applicable
             if ( planClass.isApplicableTo( ...this.predicate ) ) {
                 // plan is instantiated
-                this.#current_plan = new planClass(this.parent);
+                this.#current_plan = new planClass(this.#parent);
                 this.log('achieving intention', ...this.predicate, 'with plan', planClass.name);
                 // and plan is executed and result returned
                 try {
@@ -266,7 +304,7 @@ class Intention {
                     return plan_res
                 // or errors are caught so to continue with next plan
                 } catch (error) {
-                    this.log( 'failed intention', ...this.predicate,'with plan', planClass.name, 'with error:', ...error );
+                    this.log( 'failed intention', ...this.predicate,'with plan', planClass.name, 'with error:', error );
                 }
             }
 
@@ -324,7 +362,7 @@ class Plan {
     async subIntention ( predicate ) {
         const sub_intention = new Intention( this, predicate );
         this.#sub_intentions.push( sub_intention );
-        return await sub_intention.achieve();
+        return sub_intention.achieve();
     }
 
 }
@@ -339,7 +377,7 @@ class GoPickUp extends Plan {
         if ( this.stopped ) throw ['stopped']; // if stopped then quit
         await this.subIntention( ['go_to', x, y] );
         if ( this.stopped ) throw ['stopped']; // if stopped then quit
-        await client.pickup()
+        await client.emitPickup()
         if ( this.stopped ) throw ['stopped']; // if stopped then quit
         return true;
     }
@@ -358,38 +396,38 @@ class BlindMove extends Plan {
 
             if ( this.stopped ) throw ['stopped']; // if stopped then quit
 
-            let status_x = false;
-            let status_y = false;
+            let moved_horizontally;
+            let moved_vertically;
             
             // this.log('me', me, 'xy', x, y);
 
             if ( x > me.x )
-                status_x = await client.move('right')
+                moved_horizontally = await client.emitMove('right')
                 // status_x = await this.subIntention( 'go_to', {x: me.x+1, y: me.y} );
             else if ( x < me.x )
-                status_x = await client.move('left')
+                moved_horizontally = await client.emitMove('left')
                 // status_x = await this.subIntention( 'go_to', {x: me.x-1, y: me.y} );
 
-            if (status_x) {
-                me.x = status_x.x;
-                me.y = status_x.y;
+            if (moved_horizontally) {
+                me.x = moved_horizontally.x;
+                me.y = moved_horizontally.y;
             }
 
             if ( this.stopped ) throw ['stopped']; // if stopped then quit
 
             if ( y > me.y )
-                status_y = await client.move('up')
+                moved_vertically = await client.emitMove('up')
                 // status_x = await this.subIntention( 'go_to', {x: me.x, y: me.y+1} );
             else if ( y < me.y )
-                status_y = await client.move('down')
+                moved_vertically = await client.emitMove('down')
                 // status_x = await this.subIntention( 'go_to', {x: me.x, y: me.y-1} );
 
-            if (status_y) {
-                me.x = status_y.x;
-                me.y = status_y.y;
+            if (moved_vertically) {
+                me.x = moved_vertically.x;
+                me.y = moved_vertically.y;
             }
             
-            if ( ! status_x && ! status_y) {
+            if ( ! moved_horizontally && ! moved_vertically) {
                 this.log('stucked');
                 throw 'stucked';
             } else if ( me.x == x && me.y == y ) {

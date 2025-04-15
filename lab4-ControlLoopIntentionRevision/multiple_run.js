@@ -53,21 +53,23 @@ const commands = [
 
 // Function to spawn child processes
 function spawnProcesses() {
-    tokens.forEach(token => {
-        const childProcess = spawn( `node intention_revision.js -token=${token}`, { shell: true } );
+    for ( let i = 0; i < 5; i++ ) {
+        const name = 'm_'+i;
+        
+        const childProcess = spawn( `node intention_revision.js -name=${name}`, { shell: true } );
 
         childProcess.stdout.on('data', data => {
-            console.log(`Output from ${token.slice(-6)}: ${data}`);
+            console.log(`Output from ${name}: ${data}`);
         });
 
         childProcess.stderr.on('data', data => {
-            console.error(`Error from ${token.slice(-6)}: ${data}`);
+            console.error(`Error from ${name}: ${data}`);
         });
 
         childProcess.on('close', code => {
-            console.log(`Child process ${token.slice(-6)} exited with code ${code}`);
+            console.log(`Child process ${name} exited with code ${code}`);
         });
-    });
+    }
 }
 
 // Start the processes
