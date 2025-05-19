@@ -1,4 +1,4 @@
-import { DeliverooApi, timer } from "@unitn-asa/deliveroo-js-client";
+import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
 import { default as argsParser } from "args-parser";
 
 const client = new DeliverooApi() // expect to get host and token from cmd args
@@ -10,12 +10,12 @@ let teamAgentId = args['teamId'];
 var currentIntention = null;
 var pickupCoordination = {};
 
-client.onMsg( async (id, name, msg, reply) => {
+client.onMsg( async (id, name, /**@type {{action:string,parcelId:string}}*/msg, reply) => {
     
     if ( msg?.action == 'pickup' ) {
         
         // wait between 0-100ms before replying, in case the other agent is also replying
-        await timer(Math.random()*50);
+        await new Promise( resolve => setTimeout(resolve, Math.random()*50) );
         
         if (reply) {
             try { 
@@ -45,7 +45,7 @@ client.onParcelsSensing( async (parcels) => {
         console.log("parcel", parcel);
 
         // wait for the other agent to reply
-        const reply = await client.ask( teamAgentId, {
+        const reply = await client.emitAsk( teamAgentId, {
             action: 'pickup',
             parcelId: parcel.id
         } );
@@ -55,7 +55,7 @@ client.onParcelsSensing( async (parcels) => {
             if ( ! pickupCoordination[parcel.id] ) {
                 console.log(`We agreed: I will do the pickup`, parcel.id);
                 pickupCoordination[parcel.id] = client.id; // assign parcel to me
-                currentIntention = client.move( 'down' );
+                currentIntention = client.emitMove( 'down' );
                 let pickup = await currentIntention;
                 currentIntention = null;
             } else {

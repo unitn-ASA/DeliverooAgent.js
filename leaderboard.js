@@ -1,7 +1,9 @@
 import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
 
 const client = new DeliverooApi(
-    'http://localhost:8080', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImEyNzhiOSIsIm5hbWUiOiJnb2QiLCJ0ZWFtSWQiOiJmODA0MWUiLCJ0ZWFtTmFtZSI6ImdvZCIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0MDA2NDUyM30.dyQHtNjjmmHd4OrXbfhi2CjMvISqdihrAQxxHkMLlmU'
+    // 'https://deliveroojs2.rtibdi.disi.unitn.it', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1YWM0ZiIsIm5hbWUiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NDEyMjg1NX0.Xqhv3O9cr-dFPDGp2lIuo1nIBOq2gKGAULIgWDv0vgA'
+    'https://deliveroojs.rtibdi.disi.unitn.it', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjU2ZTJiZCIsIm5hbWUiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NDcxMTY4OH0.Dbj-5UZ8TLRNcCEHbG9-NA3ekQ2LYT7w5VtqxDssYqY'
+    // 'http://localhost:8080', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImEyNzhiOSIsIm5hbWUiOiJnb2QiLCJ0ZWFtSWQiOiJmODA0MWUiLCJ0ZWFtTmFtZSI6ImdvZCIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0MDA2NDUyM30.dyQHtNjjmmHd4OrXbfhi2CjMvISqdihrAQxxHkMLlmU'
     // 'http://localhost:8080/?name=ddos', ''
     // 'https://deliveroojs.onrender.com/?name=ddos', ''
     // 'http://rtibdi.disi.unitn.it:8080/?name=ddos', ''
@@ -12,7 +14,7 @@ const client = new DeliverooApi(
 )
 
 /**
- * @type {Map<string,[{id,name,x,y,score}]}
+ * @type {Map<string,{id,name,x,y,score}>}
  */
 const agents = new Map();
 
