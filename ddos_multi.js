@@ -4,9 +4,10 @@ import { spawn } from 'child_process';
 // Function to spawn child processes
 function spawnProcesses() {
     
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 40; i++) {
+        let name = `ddos${i}`;
         const childProcess = spawn(
-            'node ddos_one.js',
+            `nodemon ddos_one.js name=${name}`,
             { shell: true }
         );
 

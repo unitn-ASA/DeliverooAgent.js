@@ -1,6 +1,6 @@
 {
   "name": "deliverooagent",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "",
   "type": "module",
   "main": "index.js",
@@ -15,7 +15,8 @@
     "dotenv": "^16.0.3"
   },
   "dependencies": {
-    "@unitn-asa/deliveroo-js-client": "^2.0.2",
+    "@unitn-asa/deliveroo-js-client": "^2.0.3",
+    "@unitn-asa/deliveroo-js-sdk": "^1.2.2",
     "@unitn-asa/pddl-client": "^0.0.37",
     "node-fetch": "^3.3.0",
     "socket.io-client": "^4.6.0"

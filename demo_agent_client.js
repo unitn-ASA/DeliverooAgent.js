@@ -1,9 +1,14 @@
 import { default as config } from "./config.js";
-import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
+// import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
+// const client = new DeliverooApi(
+//     'https://deliveroojs.bears.disi.unitn.it/?name=myagent'
+// )
 
-const client = new DeliverooApi(
-    'https://deliveroojs25.azurewebsites.net/?name=myagent'
+import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
+const client = DjsConnect(
+    'https://deliveroojs.bears.disi.unitn.it/?name=myagent'
 )
+
 // client.onConnect( () => console.log( "socket", client.socket.id ) );
 // client.onDisconnect( () => console.log( "disconnected", client.socket.id ) );
 

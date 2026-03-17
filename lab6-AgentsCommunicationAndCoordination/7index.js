@@ -1,12 +1,12 @@
 // import child_process in ES module
 import { spawn } from 'child_process';
 
-const marco = { id: 'e083aa6f59e', name: 'marco',
-token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImUwODNhYTZmNTllIiwibmFtZSI6Im1hcmNvIiwiaWF0IjoxNzE2Mjg2NTA2fQ.grMI3zVziSg6troUw8HXi9wAvLSNil0OrBcA_Uz00V0'
+const marco = { id: 'd26d57', name: 'marco',
+token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQyNmQ1NyIsIm5hbWUiOiJtYXJjbyIsInRlYW1JZCI6ImM3ZjgwMCIsInRlYW1OYW1lIjoiZGlzaSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzQwMDA3NjIwfQ.1lfKRxSSwj3_a4fWnAV44U1koLrphwLkZ9yZnYQDoSw'
 };
 
-const paolo = { id: '1d74b61b883', name: 'paolo',
-token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjFkNzRiNjFiODgzIiwibmFtZSI6InBhb2xvIiwiaWF0IjoxNzE2Mjg4ODU0fQ.CZJuyCTpDG7RKBbvQksSK0YHZ9sTmm3H9IwOAal1Tlk'
+const paolo = { id: '74daed', name: 'paolo',
+token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijc0ZGFlZCIsIm5hbWUiOiJwYW9sbyIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzQ3NzMzMTczfQ.DkbA4ADLmiWhf-EHVH27QVWN7VmT6tazJ96VVjthTGg'
 };
 
 // Start the processes
@@ -19,7 +19,7 @@ function spawnProcesses( me, teamMate ) {
     // marco e083aa6f59e
     const childProcess = spawn(
         `node 7pickup \
-        host="http://rtibdi.disi.unitn.it:8080" \
+        host="https://deliveroojs.rtibdi.disi.unitn.it" \
         token="${me.token}" \
         teamId="${teamMate.id}" `,
         { shell: true }
