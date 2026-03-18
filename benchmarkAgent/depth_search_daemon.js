@@ -1,4 +1,4 @@
-import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
+import { DjsClientSocket } from "@unitn-asa/deliveroo-js-sdk/client";
 
 function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
     const dx = Math.abs( Math.round(x1) - Math.round(x2) )
@@ -6,13 +6,13 @@ function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
     return dx + dy;
 }
 
-export default function ( /**@type {DeliverooApi}*/client ) {
+export default function ( /**@type {DjsClientSocket}*/socket ) {
     
     var AGENTS_OBSERVATION_DISTANCE
     var MOVEMENT_DURATION
-    client.onConfig( (config) => {
-        AGENTS_OBSERVATION_DISTANCE = config.AGENTS_OBSERVATION_DISTANCE;
-        MOVEMENT_DURATION = config.MOVEMENT_DURATION;
+    socket.onConfig( (config) => {
+        AGENTS_OBSERVATION_DISTANCE = config.GAME.player.agents_observation_distance;
+        MOVEMENT_DURATION = config.GAME.player.movement_duration;
     } );
     
     /**
@@ -23,24 +23,24 @@ export default function ( /**@type {DeliverooApi}*/client ) {
      * @type {Map<string, tile>}
      */
     const map = new Map()
-    client.onTile( ( {x, y, type} ) => {
+    socket.onTile( ( {x, y, type} ) => {
         // console.log('map.set', x+'_'+y, {x, y, type})
         map.set(x+'_'+y, {x, y, type})
     } );
     
     var me = {x:undefined, y:undefined};
-    client.onYou( ( {x, y} ) => {
+    socket.onYou( ( {x, y} ) => {
         me.x = x;
         me.y = y;
     } );
 
     const agents = new Map()
-    client.onAgentsSensing( ( sensed_agents ) => {
-        for ( const {id, name, x, y, score} of sensed_agents ) {
+    socket.onAgentsSensing( ( sensing ) => {
+        for ( const { agent: {id, name, x, y, score} } of sensing ) {
             agents.set(id, {id, x, y} );
         }
         for ( const [id, {x, y}] of agents.entries() ) {
-            if ( distance (me, {x, y}) < AGENTS_OBSERVATION_DISTANCE && ! sensed_agents.find( (sensed) => id == sensed.id ) )
+            if ( distance (me, {x, y}) < AGENTS_OBSERVATION_DISTANCE && ! sensing.find( ({agent}) => id == agent.id ) )
             agents.delete(id);
         }
     } );

@@ -1,26 +1,24 @@
-import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
+import 'dotenv/config'
+import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
 
-const client = new DeliverooApi(
-    'https://deliveroojs25.azurewebsites.net',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJjOTQyMSIsIm5hbWUiOiJtYXJjbyIsInRlYW1JZCI6IjViMTVkMSIsInRlYW1OYW1lIjoiZGlzaSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzQyNTY3NDE4fQ.5m8St0OZo_DCXCriYkLtsguOm1e20-IAN2JNgXL7iUQ'
-)
+const socket = DjsConnect();
 
 const beliefset = new Map();
 
-client.onConfig( config => {
+socket.onConfig( config => {
     console.log('Config:', config);
-    console.log('Agents observation distance:', config.AGENTS_OBSERVATION_DISTANCE);
+    console.log('Agents observation distance:', config.GAME.player.agents_observation_distance);
 })
-client.onMap( (x,y,tiles) => {
+socket.onMap( (x,y,tiles) => {
     console.log('Map:', x,y,tiles);
 } )
 
-client.onYou( me => {
+socket.onYou( me => {
     // console.log('You:', me);
 })
-client.onAgentsSensing( ( agents ) => {
+socket.onAgentsSensing( ( agents ) => {
 
-    for ( let a of agents ) {
+    for ( let {agent: a} of sensing ) {
         beliefset.set( a.id, a );
     }
 

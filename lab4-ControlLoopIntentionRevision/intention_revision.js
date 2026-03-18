@@ -1,13 +1,7 @@
-import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
+import 'dotenv/config';
+import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
 
-const client = new DeliverooApi(
-    // 'https://deliveroojs25.azurewebsites.net',
-    // 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJjOTQyMSIsIm5hbWUiOiJtYXJjbyIsInRlYW1JZCI6IjViMTVkMSIsInRlYW1OYW1lIjoiZGlzaSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzQyNTY3NDE4fQ.5m8St0OZo_DCXCriYkLtsguOm1e20-IAN2JNgXL7iUQ'
-    'https://deliveroojs2.rtibdi.disi.unitn.it/',
-    // 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQyNmQ1NyIsIm5hbWUiOiJtYXJjbyIsInRlYW1JZCI6ImM3ZjgwMCIsInRlYW1OYW1lIjoiZGlzaSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzQwMDA3NjIwfQ.1lfKRxSSwj3_a4fWnAV44U1koLrphwLkZ9yZnYQDoSw'
-    // 'http://localhost:8080',
-    // 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRiZDg3MyIsIm5hbWUiOiJtYXJjbyIsInRlYW1JZCI6IjA3ZmU2MiIsInRlYW1OYW1lIjoiZGlzaSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzM4NjAzNjMwfQ.Q9btNkm3VLXsZDsNHYsQm2nGUVfFnF-TWZrz4zPaWM4'
-)
+const socket = DjsConnect();
 
 function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
     const dx = Math.abs( Math.round(x1) - Math.round(x2) )
@@ -26,7 +20,7 @@ function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
  */
 const me = {id: null, name: null, x: null, y: null, score: null};
 
-client.onYou( ( {id, name, x, y, score} ) => {
+socket.onYou( ( {id, name, x, y, score} ) => {
     me.id = id
     me.name = name
     me.x = x
@@ -39,7 +33,7 @@ client.onYou( ( {id, name, x, y, score} ) => {
  */
 const parcels = new Map();
 
-client.onParcelsSensing( async ( pp ) => {
+socket.onParcelsSensing( async ( pp ) => {
     for (const p of pp) {
         parcels.set( p.id, p);
     }
@@ -95,9 +89,9 @@ function optionsGeneration () {
 /**
  * Generate options at every sensing event
  */
-client.onParcelsSensing( optionsGeneration )
-client.onAgentsSensing( optionsGeneration )
-client.onYou( optionsGeneration )
+socket.onParcelsSensing( optionsGeneration )
+socket.onAgentsSensing( optionsGeneration )
+socket.onYou( optionsGeneration )
 
 // /**
 //  * Alternatively, generate options continuously
@@ -374,7 +368,7 @@ class GoPickUp extends Plan {
         if ( this.stopped ) throw ['stopped']; // if stopped then quit
         await this.subIntention( ['go_to', x, y] );
         if ( this.stopped ) throw ['stopped']; // if stopped then quit
-        await client.emitPickup()
+        await socket.emitPickup()
         if ( this.stopped ) throw ['stopped']; // if stopped then quit
         return true;
     }
@@ -399,10 +393,10 @@ class BlindMove extends Plan {
             // this.log('me', me, 'xy', x, y);
 
             if ( x > me.x )
-                moved_horizontally = await client.emitMove('right')
+                moved_horizontally = await socket.emitMove('right')
                 // status_x = await this.subIntention( 'go_to', {x: me.x+1, y: me.y} );
             else if ( x < me.x )
-                moved_horizontally = await client.emitMove('left')
+                moved_horizontally = await socket.emitMove('left')
                 // status_x = await this.subIntention( 'go_to', {x: me.x-1, y: me.y} );
 
             if (moved_horizontally) {
@@ -413,10 +407,10 @@ class BlindMove extends Plan {
             if ( this.stopped ) throw ['stopped']; // if stopped then quit
 
             if ( y > me.y )
-                moved_vertically = await client.emitMove('up')
+                moved_vertically = await socket.emitMove('up')
                 // status_x = await this.subIntention( 'go_to', {x: me.x, y: me.y+1} );
             else if ( y < me.y )
-                moved_vertically = await client.emitMove('down')
+                moved_vertically = await socket.emitMove('down')
                 // status_x = await this.subIntention( 'go_to', {x: me.x, y: me.y-1} );
 
             if (moved_vertically) {

@@ -1,18 +1,19 @@
-import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
+import 'dotenv/config'
+import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
 import EventEmitter from "events";
 import depth_search_daemon from "./depth_search_daemon.js";
 
 /**
  * @typedef me
- * @type { { id: string, name: string, x: number, y: number, score: number, carrying: Map<string, parcel> } }
+ * @type { { id: string, name: string, x: number, y: number, score: number, carrying: Map<string, IOParcel> } }
  */
 
 /**
- * @typedef parcel
- * @type {import("@unitn-asa/deliveroo-js-client/types/ioTypedSocket.cjs").parcel}
+ * @typedef IOParcel
+ * @type {import("@unitn-asa/deliveroo-js-sdk/types/IOParcel.js").IOParcel}
  */
 
-const client = new DeliverooApi(
+const client = DjsConnect(
     'http://localhost:8080',
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA5ZmQ2NDllNzZlIiwibmFtZSI6Im1hcmNvIiwiaWF0IjoxNjc5OTk3Njg2fQ.6_zmgL_C_9QgoOX923ESvrv2i2_1bgL_cWjMw4M7ah4'
 )
@@ -45,9 +46,9 @@ client.onYou( ( {id, name, x, y, score} ) => {
 
 const parcels = new Map();
 const sensingEmitter = new EventEmitter();
-client.onParcelsSensing( async ( perceived_parcels ) => {
+client.onParcelsSensing( async ( sensing ) => {
     let new_parcel_sensed = false;
-    for (const p of perceived_parcels) {
+    for (const {parcel: p} of sensing) {
         if ( ! parcels.has(p.id) )
             new_parcel_sensed = true;
         parcels.set( p.id, p)
@@ -56,7 +57,7 @@ client.onParcelsSensing( async ( perceived_parcels ) => {
         }
     }
     for ( const [id,p] of parcels.entries() ) {
-        if ( ! perceived_parcels.find( p=>p.id==id ) ) {
+        if ( ! sensing.find( ({parcel: p}) => p.id==id ) ) {
             parcels.delete( id ); 
             me.carrying.delete( id );
         }
@@ -69,9 +70,9 @@ var AGENTS_OBSERVATION_DISTANCE
 var MOVEMENT_DURATION
 var PARCEL_DECADING_INTERVAL
 client.onConfig( (config) => {
-    AGENTS_OBSERVATION_DISTANCE = config.AGENTS_OBSERVATION_DISTANCE;
-    MOVEMENT_DURATION = config.MOVEMENT_DURATION;
-    PARCEL_DECADING_INTERVAL = config.PARCEL_DECADING_INTERVAL == '1s' ? 1000 : 1000000;
+    AGENTS_OBSERVATION_DISTANCE = config.GAME.player.agents_observation_distance;
+    MOVEMENT_DURATION = config.GAME.player.movement_duration;
+    PARCEL_DECADING_INTERVAL = config.GAME.parcels.decaying_event == '1s' ? 1000 : 1000000;
 } );
 
 const map = {

@@ -1,16 +1,10 @@
-import { default as config } from "./config.js";
-// import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
-// const client = new DeliverooApi(
-//     'https://deliveroojs.bears.disi.unitn.it/?name=myagent'
-// )
-
+import 'dotenv/config';
 import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
-const client = DjsConnect(
-    'https://deliveroojs.bears.disi.unitn.it/?name=myagent'
-)
 
-// client.onConnect( () => console.log( "socket", client.socket.id ) );
-// client.onDisconnect( () => console.log( "disconnected", client.socket.id ) );
+const socket = DjsConnect();
+
+// socket.onConnect( () => console.log( "socket", socket.id ) );
+// socket.onDisconnect( () => console.log( "disconnected", socket.id ) );
 
 async function agentLoop () {
 
@@ -18,9 +12,9 @@ async function agentLoop () {
 
     while ( true ) {
 
-        await client.emitPutdown();
+        await socket.emitPutdown();
 
-        await client.emitPickup();
+        await socket.emitPickup();
 
         let tried = [];
 
@@ -34,7 +28,7 @@ async function agentLoop () {
             
             if ( ! tried.includes(current) ) {
                 
-                if ( await client.emitMove( current ) ) {
+                if ( await socket.emitMove( current ) ) {
                     console.log( 'moved', current );
                     previous = current;
                     break; // moved, continue

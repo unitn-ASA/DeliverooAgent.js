@@ -1,7 +1,7 @@
-import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
+import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
 import { default as argsParser } from "args-parser";
 
-const client = new DeliverooApi() // expect to get host and token from cmd args
+const client = DjsConnect() // expect to get host and token from cmd args
 await new Promise( res => client.onYou( res ) );
 
 const args = argsParser(process.argv);

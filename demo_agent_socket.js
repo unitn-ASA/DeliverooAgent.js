@@ -1,9 +1,8 @@
-import { default as config } from "./config.js";
 import { io } from "socket.io-client";
 
-var socket = io( config.host, {
+var socket = io( process.env.HOST, {
     extraHeaders: {
-        'x-token': config.token
+        'x-token': process.env.TOKEN
     },
     // query: {
     //     name: "scripted",
@@ -25,7 +24,7 @@ socket.on("you", ({id, name, x, y, score}) => {
 
 async function randomlyMove () {
 
-    var direction_index = [ Math.floor(Math.random()*4) ]
+    var direction_index = Math.floor(Math.random()*4);
 
     function getDirection () {
         if (direction_index > 3)

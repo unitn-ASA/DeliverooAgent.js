@@ -1,13 +1,7 @@
-import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
+import 'dotenv/config';
+import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
 
-const client = new DeliverooApi(
-    'https://deliveroojs25.azurewebsites.net',
-    // 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJjOTQyMSIsIm5hbWUiOiJtYXJjbyIsInRlYW1JZCI6IjViMTVkMSIsInRlYW1OYW1lIjoiZGlzaSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzQyNTY3NDE4fQ.5m8St0OZo_DCXCriYkLtsguOm1e20-IAN2JNgXL7iUQ'
-    // 'https://deliveroojs2.rtibdi.disi.unitn.it/',
-    // 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQyNmQ1NyIsIm5hbWUiOiJtYXJjbyIsInRlYW1JZCI6ImM3ZjgwMCIsInRlYW1OYW1lIjoiZGlzaSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzQwMDA3NjIwfQ.1lfKRxSSwj3_a4fWnAV44U1koLrphwLkZ9yZnYQDoSw'
-    // 'http://localhost:8080',
-    // 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRiZDg3MyIsIm5hbWUiOiJtYXJjbyIsInRlYW1JZCI6IjA3ZmU2MiIsInRlYW1OYW1lIjoiZGlzaSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzM4NjAzNjMwfQ.Q9btNkm3VLXsZDsNHYsQm2nGUVfFnF-TWZrz4zPaWM4'
-)
+const socket = DjsConnect();
 
 
 
@@ -16,7 +10,7 @@ const client = new DeliverooApi(
  */
 const me = {id: null, name: null, x: null, y: null, score: null};
 
-client.onYou( ( {id, name, x, y, score} ) => {
+socket.onYou( ( {id, name, x, y, score} ) => {
     // console.log( 'me:', me.x, me.y );
     me.id = id;
     me.name = name;
@@ -32,7 +26,7 @@ client.onYou( ( {id, name, x, y, score} ) => {
  */
 const parcels = new Map();
 
-client.onParcelsSensing( async ( pp ) => {
+socket.onParcelsSensing( async ( pp ) => {
     for ( let p of pp ) {
         parcels.set( `${p.x}_${p.y}`, p );
     }
@@ -52,17 +46,17 @@ async function blindMove ( target ) {
     
     console.log(me.name, 'goes from', me.x, me.y, 'to', target.x, target.y);
 
-    var m = new Promise( res => client.onYou( m => m.x % 1 != 0 || m.y % 1 != 0 ? null : res() ) );
+    var m = new Promise( res => socket.onYou( m => m.x % 1 != 0 || m.y % 1 != 0 ? null : res() ) );
 
     if ( me.x < target.x )
-        await client.emitMove('right');
+        await socket.emitMove('right');
     else if ( me.x > target.x )
-        await client.emitMove('left');
+        await socket.emitMove('left');
     
     if ( me.y < target.y )
-        await client.emitMove('up');
+        await socket.emitMove('up');
     else if ( me.y > target.y )
-        await client.emitMove('down');
+        await socket.emitMove('down');
 
     await m;
 
@@ -105,7 +99,7 @@ while (true) {
     await blindMove( nearest )
     console.log( 'moved to parcel', nearest.id, me.x, me.y );
     
-    await client.emitPickup();
+    await socket.emitPickup();
     
     console.log( 'picked up' );
 

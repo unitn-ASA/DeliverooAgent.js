@@ -1,6 +1,6 @@
-import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
+import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
 
-const client = new DeliverooApi(
+const client = DjsConnect(
     // 'https://deliveroojs2.rtibdi.disi.unitn.it', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1YWM0ZiIsIm5hbWUiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NDEyMjg1NX0.Xqhv3O9cr-dFPDGp2lIuo1nIBOq2gKGAULIgWDv0vgA'
     'https://deliveroojs.rtibdi.disi.unitn.it', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjU2ZTJiZCIsIm5hbWUiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NDcxMTY4OH0.Dbj-5UZ8TLRNcCEHbG9-NA3ekQ2LYT7w5VtqxDssYqY'
     // 'http://localhost:8080', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImEyNzhiOSIsIm5hbWUiOiJnb2QiLCJ0ZWFtSWQiOiJmODA0MWUiLCJ0ZWFtTmFtZSI6ImdvZCIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0MDA2NDUyM30.dyQHtNjjmmHd4OrXbfhi2CjMvISqdihrAQxxHkMLlmU'
@@ -30,7 +30,7 @@ const start = new Date();
 
 client.onAgentsSensing( ( sensed ) => {
 
-    for ( let a of sensed ) {
+    for ( let {agent: a} of sensed ) {
         agents.set( a.id, a );
     }
 

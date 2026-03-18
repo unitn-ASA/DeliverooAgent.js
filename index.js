@@ -1,3 +1,3 @@
 #!/usr/bin/env node
-import { DeliverooApi, timer } from "@unitn-asa/deliveroo-js-client";
+import { DjsConnect, DjsClientSocket, DjsRestClient } from "@unitn-asa/deliveroo-js-sdk";
 import * as pddlClient from "@unitn-asa/pddl-client";

@@ -5,9 +5,9 @@
 import * as tfn from '@tensorflow/tfjs-node';
 import * as tf from '@tensorflow/tfjs';
 
-import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
+import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
 
-const client = new DeliverooApi(
+const client = DjsConnect(
   'http://localhost:8080',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQ1OTBkNTA3MWI1IiwibmFtZSI6ImdvZCIsImlhdCI6MTcxNjkyNDcwNX0.-8ZdtFC9khWjQGITZ0Xm3aMVlUXtq3w2A6hU8emKk8I'
 );

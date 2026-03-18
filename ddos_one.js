@@ -1,13 +1,9 @@
-import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
+import 'dotenv/config';
+import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
 
-const client = new DeliverooApi(
-    'http://localhost:8080'
-    // 'https://deliveroojs.onrender.com/?name=ddos', ''
-    // 'http://rtibdi.disi.unitn.it:8080/?name=ddos', ''
-    // 'https://deliveroojs25.azurewebsites.net/?name=ddos'
-);
+const socket = DjsConnect();
 
-// const client2 = new DeliverooApi(
+// const client2 = DjsConnect(
 //     'http://localhost:8080/?name=ddos', client.token
 //     // 'https://deliveroojs.onrender.com/?name=ddos', client.token
 //     // 'http://rtibdi.disi.unitn.it:8080/?name=ddos', client.token
@@ -15,22 +11,22 @@ const client = new DeliverooApi(
 
 async function loop1() {
     while (true) {
-        await client.emitPickup();
+        await socket.emitPickup();
         // await new Promise(resolve => setTimeout(resolve, 0));
-        await client.emitPutdown();
+        await socket.emitPutdown();
         // await new Promise(resolve => setTimeout(resolve, 0));
-        await client.emitMove('down');
+        await socket.emitMove('down');
         // await new Promise(resolve => setTimeout(resolve, 0));
-        await client.emitMove('up');
+        await socket.emitMove('up');
         // await new Promise(resolve => setTimeout(resolve, 0));
     }
 }
 async function loop2() {
     let i = 0;
-    let name = (await client.me).name;
+    let name = (await socket.me).name;
     while (true) {
         console.log('say');
-        client.emitSay( '73d6d9', `hello ${i++} from ddos${name}` );
+        socket.emitSay( '73d6d9', `hello ${i++} from ddos${name}` );
         await new Promise(resolve => setTimeout(resolve, 0));
     }
 }

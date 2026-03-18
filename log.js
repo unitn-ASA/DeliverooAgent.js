@@ -1,17 +1,21 @@
-import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
-import { default as config } from "./config.js";
+import 'dotenv/config'
+import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
 
 const LOG_FROM = process.argv.slice(2);
 
-const client = new DeliverooApi( config.host, config.token );
+// const client = DjsConnect( process.env.HOST, process.env.TOKEN );
+const client = DjsConnect();
 
-client.socket.on( 'log', ( {src, timestamp, socket, id, name}, ...message ) => {
-
-    if ( LOG_FROM.length==0 || LOG_FROM.includes(socket) || LOG_FROM.includes(id) || LOG_FROM.includes(name) ) {
-        if ( src == 'server' )
-            console.log( 'server', timestamp, '\t', ...message )
-        else
-            console.log( 'client', timestamp, socket, id, name, '\t', ...message );
+client.on( 'log', ( src, {ms, frame}, ...message ) => {
+        
+    if ( src != 'server' ) {
+        const {socket, id, name} = src;
+        if ( LOG_FROM.includes(socket) || LOG_FROM.includes(id) || LOG_FROM.includes(name) )
+            console.log( 'client', ms, socket, id, name, '\t', ...message );
+    }
+    else {
+        if ( LOG_FROM.length == 0 )
+            console.log( 'server', ms, '\t', ...message )
     }
 
 } );

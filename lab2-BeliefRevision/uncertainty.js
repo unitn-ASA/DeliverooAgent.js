@@ -1,21 +1,19 @@
-import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
+import 'dotenv/config'
+import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
 
-const client = new DeliverooApi(
-    'https://deliveroojs25.azurewebsites.net',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJjOTQyMSIsIm5hbWUiOiJtYXJjbyIsInRlYW1JZCI6IjViMTVkMSIsInRlYW1OYW1lIjoiZGlzaSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzQyNTY3NDE4fQ.5m8St0OZo_DCXCriYkLtsguOm1e20-IAN2JNgXL7iUQ'
-)
+const socket = DjsConnect();
 
 /** @type {Map<string,[{id,name,x,y}|string]>} */
 const beliefset = new Map();
 const start = Date.now();
-var AOD; client.onConfig( config => AOD = config.AGENTS_OBSERVATION_DISTANCE );
-var me; client.onYou( m => me = m );
+var AOD; socket.onConfig( config => AOD = config.GAME.player.agents_observation_distance );
+var me; socket.onYou( m => me = m );
 const dist = (a1,a2) => Math.abs(a1.x-a2.x) + Math.abs(a1.y-a2.y);
 
-client.onAgentsSensing( ( agents ) => {
+socket.onAgentsSensing( ( sensing ) => {
 
     // const now = Date.now();
-    // for ( let a of agents ) {
+    // for ( let {agent: a} of sensing ) {
     //     if ( ! beliefset.has( a.id ) )
     //         beliefset.set( a.id, [] )
     //     a.timestamp = now;
@@ -38,7 +36,7 @@ client.onAgentsSensing( ( agents ) => {
     // }).join(' ');
     // console.log(prettyPrint)
     
-    for (const a of agents) {
+    for (const {agent: a} of sensing) {
 
         if ( a.x % 1 != 0 || a.y % 1 != 0 ) // skip intermediate values (0.6 or 0.4)
             continue;
@@ -90,7 +88,7 @@ client.onAgentsSensing( ( agents ) => {
         const last = history[history.length-1]
         const second_last = (history.length>1 ? history[history.length-2] : 'no knowledge')
 
-        if ( ! agents.map( a=>a.id ).includes( id ) ) {
+        if ( ! sensing.map( a=>a.id ).includes( id ) ) {
             // If I am not seeing him anymore
             
             if ( last != 'lost' ) {

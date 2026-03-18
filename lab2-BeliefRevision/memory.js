@@ -1,21 +1,19 @@
-import { DeliverooApi } from "@unitn-asa/deliveroo-js-client";
+import 'dotenv/config'
+import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
 
-const client = new DeliverooApi(
-    'https://deliveroojs25.azurewebsites.net',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjJjOTQyMSIsIm5hbWUiOiJtYXJjbyIsInRlYW1JZCI6IjViMTVkMSIsInRlYW1OYW1lIjoiZGlzaSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzQyNTY3NDE4fQ.5m8St0OZo_DCXCriYkLtsguOm1e20-IAN2JNgXL7iUQ'
-)
+const socket = DjsConnect();
 
 /**
  * @type {Map<string,{id,name,x,y,score,timestamp,direction}[]>}
  */
 const beliefset = new Map();
 const start = Date.now();
-var AOD; client.onConfig( config => AOD = config.AGENTS_OBSERVATION_DISTANCE );
-var me; client.onYou( m => me = m );
+var AOD; socket.onConfig( config => AOD = config.GAME.player.agents_observation_distance );
+var me; socket.onYou( m => me = m );
 
-client.onAgentsSensing( ( agents ) => {
+socket.onAgentsSensing( ( sensing ) => {
     const timestamp = Date.now() - start;
-    for ( let a of agents ) {
+    for ( let {agent: a} of sensing ) {
         if ( ! beliefset.has( a.id ) )
             beliefset.set( a.id, [] )
         const log = {
