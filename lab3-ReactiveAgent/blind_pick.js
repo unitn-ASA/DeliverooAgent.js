@@ -26,8 +26,8 @@ socket.onYou( ( {id, name, x, y, score} ) => {
  */
 const parcels = new Map();
 
-socket.onParcelsSensing( async ( pp ) => {
-    for ( let p of pp ) {
+socket.onSensing( async ( sensing ) => {
+    for ( let p of sensing.parcels ) {
         parcels.set( `${p.x}_${p.y}`, p );
     }
 } )

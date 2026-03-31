@@ -7,7 +7,7 @@ const beliefset = new Map();
 
 socket.onConfig( config => {
     console.log('Config:', config);
-    console.log('Agents observation distance:', config.GAME.player.agents_observation_distance);
+    console.log('Agents observation distance:', config.GAME.player.observation_distance);
 })
 socket.onMap( (x,y,tiles) => {
     console.log('Map:', x,y,tiles);
@@ -16,9 +16,9 @@ socket.onMap( (x,y,tiles) => {
 socket.onYou( me => {
     // console.log('You:', me);
 })
-socket.onAgentsSensing( ( agents ) => {
+socket.onSensing( ( sensing ) => {
 
-    for ( let {agent: a} of sensing ) {
+    for ( let a of sensing.agents ) {
         beliefset.set( a.id, a );
     }
 

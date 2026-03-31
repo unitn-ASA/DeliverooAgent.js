@@ -33,12 +33,12 @@ socket.onYou( ( {id, name, x, y, score} ) => {
  */
 const parcels = new Map();
 
-socket.onParcelsSensing( async ( pp ) => {
-    for (const p of pp) {
+socket.onSensing( async ( sensing ) => {
+    for (const p of sensing.parcels) {
         parcels.set( p.id, p);
     }
     for ( const p of parcels.values() ) {
-        if ( pp.map( p => p.id ).find( id => id == p.id ) == undefined ) {
+        if ( sensing.parcels.map( p => p.id ).find( id => id == p.id ) == undefined ) {
             parcels.delete( p.id );
         }
     }
@@ -89,8 +89,7 @@ function optionsGeneration () {
 /**
  * Generate options at every sensing event
  */
-socket.onParcelsSensing( optionsGeneration )
-socket.onAgentsSensing( optionsGeneration )
+socket.onSensing( optionsGeneration )
 socket.onYou( optionsGeneration )
 
 // /**

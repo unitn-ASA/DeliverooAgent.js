@@ -21,12 +21,12 @@ socket.onYou( ( {id, name, x, y, score} ) => {
 
 var control = false;
 
-socket.onParcelsSensing( async ( sensings ) => {
+socket.onSensing( async ( sensings ) => {
 
     console.log( `me(${me.x},${me.y})`,
         control ? 'skip' : 'go to parcels: ',
-        sensings
-        .map( ({parcel:p}) => `${p.reward}@(${p.x},${p.y})` )
+        sensings.parcels
+        .map( p => `${p.reward}@(${p.x},${p.y})` )
         .join( ' ' )
     );
 
@@ -35,7 +35,7 @@ socket.onParcelsSensing( async ( sensings ) => {
     }
     control = true;
     
-    for ( let {parcel:p} of sensings ) {
+    for ( let p of sensings.parcels ) {
         if ( ! p.carriedBy ) {
             if      ( me.x == p.x-1 && me.y == p.y )
                 await socket.emitMove('right');

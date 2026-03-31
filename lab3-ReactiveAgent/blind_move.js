@@ -62,15 +62,15 @@ while ( me.x != target.x || me.y != target.y ) {
     await m;
 }
 
-socket.onParcelsSensing( async ( parcels ) => {
+socket.onSensing( async ( sensing ) => {
     
     // console.log( `me(${me.x},${me.y})`,
-    //     parcels
+    //     sensing.parcels
     //     .map( p => `${p.reward}@(${p.x},${p.y})` )
     //     .join( ' ' )
     // );
 
-    // for ( let p of parcels ) {
+    // for ( let p of sensing.parcels ) {
     //     if ( ! p.carriedBy ) {
     //         if ( me.x < p.x )
     //             await client.emitMove('right');

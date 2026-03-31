@@ -8,10 +8,10 @@ function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
 
 export default function ( /**@type {DjsClientSocket}*/socket ) {
     
-    var AGENTS_OBSERVATION_DISTANCE
+    var OBSERVATION_DISTANCE
     var MOVEMENT_DURATION
     socket.onConfig( (config) => {
-        AGENTS_OBSERVATION_DISTANCE = config.GAME.player.agents_observation_distance;
+        OBSERVATION_DISTANCE = config.GAME.player.observation_distance;
         MOVEMENT_DURATION = config.GAME.player.movement_duration;
     } );
     
@@ -35,12 +35,12 @@ export default function ( /**@type {DjsClientSocket}*/socket ) {
     } );
 
     const agents = new Map()
-    socket.onAgentsSensing( ( sensing ) => {
-        for ( const { agent: {id, name, x, y, score} } of sensing ) {
+    socket.onSensing( ( sensing ) => {
+        for ( const {id, name, x, y, score} of sensing.agents ) {
             agents.set(id, {id, x, y} );
         }
         for ( const [id, {x, y}] of agents.entries() ) {
-            if ( distance (me, {x, y}) < AGENTS_OBSERVATION_DISTANCE && ! sensing.find( ({agent}) => id == agent.id ) )
+            if ( distance (me, {x, y}) < OBSERVATION_DISTANCE && ! sensing.agents.find( ({id: agent_id}) => id == agent_id ) )
             agents.delete(id);
         }
     } );

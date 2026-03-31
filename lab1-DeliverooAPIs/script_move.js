@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
+import { DjsConnect, DjsClientSocket } from "@unitn-asa/deliveroo-js-sdk/client";
 
 const socket = DjsConnect()
 

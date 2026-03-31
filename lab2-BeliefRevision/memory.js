@@ -8,12 +8,12 @@ const socket = DjsConnect();
  */
 const beliefset = new Map();
 const start = Date.now();
-var AOD; socket.onConfig( config => AOD = config.GAME.player.agents_observation_distance );
+var AOD; socket.onConfig( config => AOD = config.GAME.player.observation_distance );
 var me; socket.onYou( m => me = m );
 
-socket.onAgentsSensing( ( sensing ) => {
+socket.onSensing( ( sensing ) => {
     const timestamp = Date.now() - start;
-    for ( let {agent: a} of sensing ) {
+    for ( let a of sensing.agents ) {
         if ( ! beliefset.has( a.id ) )
             beliefset.set( a.id, [] )
         const log = {

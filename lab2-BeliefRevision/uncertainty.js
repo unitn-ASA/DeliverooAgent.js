@@ -6,11 +6,11 @@ const socket = DjsConnect();
 /** @type {Map<string,[{id,name,x,y}|string]>} */
 const beliefset = new Map();
 const start = Date.now();
-var AOD; socket.onConfig( config => AOD = config.GAME.player.agents_observation_distance );
+var AOD; socket.onConfig( config => AOD = config.GAME.player.observation_distance );
 var me; socket.onYou( m => me = m );
 const dist = (a1,a2) => Math.abs(a1.x-a2.x) + Math.abs(a1.y-a2.y);
 
-socket.onAgentsSensing( ( sensing ) => {
+socket.onSensing( ( sensing ) => {
 
     // const now = Date.now();
     // for ( let {agent: a} of sensing ) {
@@ -36,7 +36,7 @@ socket.onAgentsSensing( ( sensing ) => {
     // }).join(' ');
     // console.log(prettyPrint)
     
-    for (const {agent: a} of sensing) {
+    for (const a of sensing.agents) {
 
         if ( a.x % 1 != 0 || a.y % 1 != 0 ) // skip intermediate values (0.6 or 0.4)
             continue;

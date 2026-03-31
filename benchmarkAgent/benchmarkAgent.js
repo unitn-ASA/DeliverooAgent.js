@@ -46,9 +46,9 @@ client.onYou( ( {id, name, x, y, score} ) => {
 
 const parcels = new Map();
 const sensingEmitter = new EventEmitter();
-client.onParcelsSensing( async ( sensing ) => {
+client.onSensing( async ( sensing ) => {
     let new_parcel_sensed = false;
-    for (const {parcel: p} of sensing) {
+    for (const p of sensing.parcels) {
         if ( ! parcels.has(p.id) )
             new_parcel_sensed = true;
         parcels.set( p.id, p)
@@ -57,7 +57,7 @@ client.onParcelsSensing( async ( sensing ) => {
         }
     }
     for ( const [id,p] of parcels.entries() ) {
-        if ( ! sensing.find( ({parcel: p}) => p.id==id ) ) {
+        if ( ! sensing.parcels.find( parcel => parcel.id==id ) ) {
             parcels.delete( id ); 
             me.carrying.delete( id );
         }
@@ -70,7 +70,7 @@ var AGENTS_OBSERVATION_DISTANCE
 var MOVEMENT_DURATION
 var PARCEL_DECADING_INTERVAL
 client.onConfig( (config) => {
-    AGENTS_OBSERVATION_DISTANCE = config.GAME.player.agents_observation_distance;
+    AGENTS_OBSERVATION_DISTANCE = config.GAME.player.observation_distance;
     MOVEMENT_DURATION = config.GAME.player.movement_duration;
     PARCEL_DECADING_INTERVAL = config.GAME.parcels.decaying_event == '1s' ? 1000 : 1000000;
 } );
