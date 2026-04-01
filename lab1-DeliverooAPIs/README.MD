@@ -39,28 +39,58 @@ style: |
 # Deliveroojs APIs
 ## Lab 1: Introduction to Agent Development
 
-Building autonomous agents for the Deliveroo environment
+Building autonomous agents for the Deliveroo.js environment
 
 ---
 
 ## Learning Objectives
 
-In this lab, you will implement an agent that can:
+In this lab, we will learn how to interact with the Deliveroojs APIs, implementing a script that acts as a simple agent:
 
 - **Navigate** along a predefined path
 - **Pick up** parcels from the environment
 - **Deliver** parcels to their destinations
 
-### Challenge: Multi-Agent Scenarios
-What happens when other agents are moving?
+### Deliveroo.js
 
-- Handle **failing actions** gracefully
-- Implement **retry logic** for blocked paths
-- Coordinate with other agents in shared spaces
+Deliveroo.js it's a **Grid-Based** parcel collection videogame. You can play in **Multi-Player** from your browser or develop your own Autonomous Agent that plays in your place.
 
 ---
 
-## Deliveroo SDK Architecture
+## Where to play
+
+Play on the web at [https://deliveroojs.azurewebsites.net/](https://deliveroojs.azurewebsites.net/), or preview the latest `develop` version at [https://deliveroojsdev.azurewebsites.net/](https://deliveroojsdev.azurewebsites.net/)
+
+Within unitn network at https://deliveroojs.bears.disi.unitn.it/ (Requires unitn VPN which can be installed following instructions available at https://servicedesk.unitn.it/sd/it/service/vpn?id=unitrento_v2_service_card&sys_id=e5a898fec35bfd104cbb7055df013171).
+
+To run locally:
+
+1. `git clone https://github.com/unitn-ASA/Deliveroo.js.git`
+1. `cd Deliveroo.js`, `npm run build`, `npm start`
+
+---
+
+## How to play
+
+    As user:      `a`: left, `s`: down, `d`: right, `w`: up,
+                  `q`: pickup, `e`: putdown
+    As an admin:  press `space` to create or dispose parcels
+                  and numeric keys to modify tiles.
+
+## To start developing your own scripts
+
+- Create an empty npm project `npm init`
+- Install the SDK npm package `npm install @unitn-asa/deliveroo-js-sdk`
+- Import utilities classes and types from the sdk package
+  ```javascript
+  // See https://github.com/unitn-ASA/Deliveroo.js/tree/master/packages
+  import { DjsConnect, DjsClientSocket } from "@unitn-asa/deliveroo-js-sdk/client";
+  ```
+- Examples are available at [github.com/unitn-ASA/DeliverooAgent.js](https://github.com/unitn-ASA/DeliverooAgent.js).
+
+---
+
+## Deliveroo.js SDK Architecture
 
 The SDK provides three main client classes:
 
@@ -90,15 +120,14 @@ DjsConnect
 
 ## Connection & Authentication
 
-### Two Authentication Methods
-
+Method 1: Hardcoded
 ```javascript
-// Method 1: Token-based
 const socket = DjsConnect( 'localhost:8080', 'YOUR_TOKEN' } );
 ```
 
-### Environment Variables
+Method 2: Environment Variables
 ```bash
+# This is file .env
 HOST=localhost:8080
 TOKEN=your_token_here
 # or
@@ -152,7 +181,7 @@ socket.on('connect', () => { /* ... */ });
 socket.on('disconnect', () => { /* ... */ });
 ```
 
----
+<!-- ---
 
 ## Agent Communication
 
@@ -180,7 +209,7 @@ socket.on('msg', (id, name, msg, replyCallback) => {
     console.log(`From ${name}: ${msg}`);
     replyCallback('Got it!');
 });
-```
+``` -->
 
 ---
 
@@ -257,9 +286,11 @@ Via `DjsRestClient` or direct HTTP calls:
 | PATCH | `/api/configs` | Update configuration |
 | DELETE | `/api/parcels/:id` | Remove parcel |
 
+Check API documentation at https://deliveroojs.bears.disi.unitn.it/api-docs/
+
 ---
 
-## Handling Failures
+## Example: Handling Failures
 
 When multiple agents compete for resources:
 

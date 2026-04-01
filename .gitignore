@@ -28,3 +28,5 @@ bin
 
 # Deliveroo.js submodule repository
 Deliveroo.js
+
+*.pdf
