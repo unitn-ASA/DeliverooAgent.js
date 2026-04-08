@@ -3,13 +3,17 @@ import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
 
 const socket = DjsConnect();
 
-/**
- * @type {Map<string,{id,name,x,y,score,timestamp,direction}[]>}
- */
+/** @type {Map<string,{id:string, name:string, x:number, y:number, score:number, timestamp:number, direction:string}[]>} */
 const beliefset = new Map();
 const start = Date.now();
-var AOD; socket.onConfig( config => AOD = config.GAME.player.observation_distance );
-var me; socket.onYou( m => me = m );
+
+/** @type {number} */
+var OBSERVATION_DISTANCE;
+socket.onConfig( config => OBSERVATION_DISTANCE = config.GAME.player.observation_distance );
+
+/** @type {import('@unitn-asa/deliveroo-js-sdk/client').IOAgent} */
+var me;
+socket.onYou( m => me = m );
 
 socket.onSensing( ( sensing ) => {
     const timestamp = Date.now() - start;
@@ -26,7 +30,7 @@ socket.onSensing( ( sensing ) => {
             direction: 'none'
         }
         const logs = beliefset.get( a.id );
-        if ( logs.length>0 ) {
+        if ( logs && logs.length>0 ) {
             var previous = logs[logs.length-1];
             if ( previous.x < a.x ) log.direction = 'right';
             else if ( previous.x > a.x ) log.direction = 'left';
@@ -34,13 +38,13 @@ socket.onSensing( ( sensing ) => {
             else if ( previous.y > a.y ) log.direction = 'down';
             else log.direction = 'none';
         }
-        beliefset.get( a.id ).push( log );
+        beliefset.get( a.id )?.push( log );
     }
     // compute if within perceiving area
     let prettyPrint = Array.from(beliefset.values()).map( (logs) => {
         const {timestamp,name,x,y,direction} = logs[logs.length-1]
         const d = dist( me, {x,y} );
-        return `${name}(${direction},${d<AOD})@${timestamp}:${x},${y}`;
+        return `${name}(${direction},${d<OBSERVATION_DISTANCE})@${timestamp}:${x},${y}`;
     }).join(' ');
     console.log(prettyPrint)
 } )

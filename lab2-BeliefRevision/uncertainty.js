@@ -1,75 +1,78 @@
-import 'dotenv/config'
+import dotenv from 'dotenv'
+dotenv.config({path: '../.env', override: true})
 import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
+/** @typedef {import("@unitn-asa/deliveroo-js-sdk/client").IOAgent} IOAgent */
+
+
 
 const socket = DjsConnect();
+socket.connect();
 
-/** @type {Map<string,[{id,name,x,y}|string]>} */
+/** @type {Map<string,[{name:string,x:number,y:number}|string]>} */
 const beliefset = new Map();
+
+/** @type {number} */
 const start = Date.now();
-var AOD; socket.onConfig( config => AOD = config.GAME.player.observation_distance );
-var me; socket.onYou( m => me = m );
-const dist = (a1,a2) => Math.abs(a1.x-a2.x) + Math.abs(a1.y-a2.y);
+
+/** @type {number} */
+var AOD;
+
+socket.onConfig( config => AOD = config.GAME.player.observation_distance );
+
+/** @type {IOAgent} */
+var me;
+
+socket.onYou( m => me = m );
+
+/**
+ * @param {{x?:number,y?:number}} a1
+ * @param {{x?:number,y?:number}} a2
+ * @returns {number}
+ */
+const dist = (a1, a2) => a1.x && a1.y && a2.x && a2.y ? Math.abs(a1.x-a2.x) + Math.abs(a1.y-a2.y) : Infinity;
 
 socket.onSensing( ( sensing ) => {
-
-    // const now = Date.now();
-    // for ( let {agent: a} of sensing ) {
-    //     if ( ! beliefset.has( a.id ) )
-    //         beliefset.set( a.id, [] )
-    //     a.timestamp = now;
-    //     const logs = beliefset.get( a.id );
-    //     if ( logs.length>0 ) {
-    //         var previous = logs[logs.length-1];
-    //         if ( previous.x < a.x ) a.direction = 'right';
-    //         else if ( previous.x > a.x ) a.direction = 'left';
-    //         else if ( previous.y < a.y ) a.direction = 'up';
-    //         else if ( previous.y > a.y ) a.direction = 'down';
-    //         else a.direction = 'none';
-    //     }
-    //     beliefset.get( a.id ).push( a );
-    // }
-
-    // let prettyPrint = Array.from(beliefset.values()).map( (logs) => {
-    //     const {timestamp,name,x,y,direction} = logs[logs.length-1]
-    //     const d = dist( me, {x,y} ); // if within perceiving area d<AOD
-    //     return `${name}(${direction})@-${now-timestamp}:${x},${y}`;
-    // }).join(' ');
-    // console.log(prettyPrint)
     
     for (const a of sensing.agents) {
 
+        // if x or y are undefined, skip him, I don't know where he is and I can't do anything with him
+        if ( !a.x || !a.y )
+            continue;
+        
+        // if the agent is moving between two tiles, skip him
         if ( a.x % 1 != 0 || a.y % 1 != 0 ) // skip intermediate values (0.6 or 0.4)
             continue;
 
         // I meet someone for the first time
-        if ( ! beliefset.has( a.id) ) {
+        if ( ! beliefset.has(a.id) ) {
             
             console.log( "Nice to meet you", a.name );
-            beliefset.set( a.id, [a] );
+            beliefset.set( a.id, [{ name: a.name, x: a.x, y: a.y }] );
 
         } else { // I remember him
 
             // this is everything I know about him
             const history = beliefset.get( a.id )
+            if ( !history ) continue; // this should not happen, but this fix type checking error
 
             // this is about the last time I saw him
             const last = history[history.length-1]
             const second_last = (history.length>2 ? history[history.length-2] : 'no knowledge')
             
-            if ( last != 'lost' ) { // I was seeing him also last time
+            if ( typeof(last) === 'object' ) { // I was seeing him also last time
 
                 if ( last.x != a.x || last.y != a.y ) { // But he moved
                 
-                    history.push( a )
+                    history.push( { name: a.name, x: a.x, y: a.y } )
                     console.log( 'I\'m seeing you moving', a.name )
                 
                 } else { // Still here but not moving
 
                 }                
 
-            } else { // I see him again after some time
+            } else if ( typeof(second_last) === 'object' ) { // I see him again after some time
                 
-                history.push( a )
+                history.push( { name: a.name, x: a.x, y: a.y } )
 
                 if ( second_last.x != a.x || second_last.y != a.y ) {
                     console.log( 'Welcome back, seems that you moved', a.name )
@@ -88,18 +91,18 @@ socket.onSensing( ( sensing ) => {
         const last = history[history.length-1]
         const second_last = (history.length>1 ? history[history.length-2] : 'no knowledge')
 
-        if ( ! sensing.map( a=>a.id ).includes( id ) ) {
+        if ( ! sensing.agents.map( a => a.id ).includes( id ) ) {
             // If I am not seeing him anymore
             
-            if ( last != 'lost' ) {
+            if ( typeof(last) === 'object' ) { // meaning last != 'lost'
                 // Just went off
 
                 history.push( 'lost' );
                 console.log( 'Bye', last.name );
 
-            } else {
-                // A while since last time I saw him
-
+            } else if ( typeof(second_last) === 'object' ) { // while last == 'lost'
+                // It has been a while, since last time I saw him
+                
                 console.log( 'Its a while that I don\'t see', second_last.name, 'I remember him in', second_last.x, second_last.y );
                 
                 if ( dist(me, second_last) <= 3 ) {
@@ -117,43 +120,3 @@ socket.onSensing( ( sensing ) => {
 
 } )
 
-
-
-/**
- * 30/03/2023
- * Implement beliefset revision so to:
- * 
-    // I meet someone for the first time
-    console.log( 'Hello', a.name )
-
-    // I already met him in the past
-
-        // I was seeing him also last time
-            
-            // But he moved
-            console.log( 'I\'m seeing you moving', a.name )
-
-            // Or he did not moved
-            console.log(  )
-    
-        // I see him again after some time
-        
-            // Seems that he moved
-            console.log( 'Welcome back, seems that you moved', a.name )
-
-            // As far as I remember he is still here
-            console.log( 'Welcome back, seems you are still here as before', a.name )
-
-    // I am perceiving (eventually no one is around me) and seems that I am not seeing him anymore
-    
-        // He just went off, right now
-        console.log( 'Bye', last.name );
-
-        // It's already a while since last time I saw him
-        console.log( 'Its a while that I don\'t see', second_last.name, 'I remember him in', second_last.x, second_last.y );
-        
-            // I'm back where I remember I saw himlast time
-            console.log( 'I remember', second_last.name, 'was within 3 tiles from here. Forget him.' );
- *
- *
- */

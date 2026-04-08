@@ -1,37 +1,28 @@
 import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
+/** @typedef {import("@unitn-asa/deliveroo-js-sdk/client").IOAgent} IOAgent */
 
-const client = DjsConnect(
-    // 'https://deliveroojs2.rtibdi.disi.unitn.it', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1YWM0ZiIsIm5hbWUiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NDEyMjg1NX0.Xqhv3O9cr-dFPDGp2lIuo1nIBOq2gKGAULIgWDv0vgA'
-    'https://deliveroojs.rtibdi.disi.unitn.it', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjU2ZTJiZCIsIm5hbWUiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0NDcxMTY4OH0.Dbj-5UZ8TLRNcCEHbG9-NA3ekQ2LYT7w5VtqxDssYqY'
-    // 'http://localhost:8080', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImEyNzhiOSIsIm5hbWUiOiJnb2QiLCJ0ZWFtSWQiOiJmODA0MWUiLCJ0ZWFtTmFtZSI6ImdvZCIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc0MDA2NDUyM30.dyQHtNjjmmHd4OrXbfhi2CjMvISqdihrAQxxHkMLlmU'
-    // 'http://localhost:8080/?name=ddos', ''
-    // 'https://deliveroojs.onrender.com/?name=ddos', ''
-    // 'http://rtibdi.disi.unitn.it:8080/?name=ddos', ''
-
-    // 'http://rtibdi.disi.unitn.it:8080',
-    // god a7de10b05d1 @ http://rtibdi.disi.unitn.it:8080
-    // 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImE3ZGUxMGIwNWQxIiwibmFtZSI6ImdvZCIsImlhdCI6MTcxNTA3ODg2MX0.fB4OowVYwujN3miDWrPgvD35iY7QQW3cy6I8xLkK-ps'
-)
+const client = DjsConnect();
 
 /**
- * @type {Map<string,{id,name,x,y,score}>}
+ * @type {Map<string,IOAgent&{agentPostfix:string}>}
  */
 const agents = new Map();
 
 /**
- * @type {Map<string,{teamName,score,pti:number,agents:[{id,name,score}]}}
+ * @type {Map<string,{teamName:string,score:number,pti:number,agents:[IOAgent]}>}
  */
 const teams = new Map();
 
-/**
- * @type {Date}
- */
-const start = new Date();
+/** @type {number} */
+const start = Date.now();
 
-client.onAgentsSensing( ( sensed ) => {
+client.onSensing( ( sensed ) => {
 
-    for ( let {agent: a} of sensed ) {
-        agents.set( a.id, a );
+    for ( let a of sensed.agents ) {
+        agents.set( a.id, {
+            ...a,
+            agentPostfix: a.name.split( '_' )[ 1 ] || '?'
+        } );
     }
 
     // update leaderboard
@@ -42,11 +33,12 @@ client.onAgentsSensing( ( sensed ) => {
         a.teamName = teamName;
         a.agentPostfix = agentPostfix || '?';
 
-        if ( ! teams.has( teamName ) ) {
-            teams.set( teamName, { teamName, score: a.score, agents:[a] } );
+        const team = teams.get( teamName );
+        if ( team ) {
+            team.score += a.score;
+            team.agents.push( a );
         } else {
-            teams.get( teamName ).score += a.score;
-            teams.get( teamName ).agents.push( a );
+            teams.set( teamName, { teamName, score: a.score, agents:[a], pti:0 } );
         }
     }
 
@@ -57,7 +49,8 @@ client.onAgentsSensing( ( sensed ) => {
         return team;
     } );
 
-    const now = new Date();
+    /** @type {number} */
+    const now = Date.now();
     // compute time from now since start as mm:ss
     const mmss = `${Math.floor((now-start)/60000)}:${(Math.floor((now-start)/1000)%60).toString().padStart(2,'0')}`;
 

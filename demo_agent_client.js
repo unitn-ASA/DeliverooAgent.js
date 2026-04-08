@@ -16,6 +16,7 @@ async function agentLoop () {
 
         await socket.emitPickup();
 
+        /** @type {string[]} */
         let tried = [];
 
         while ( tried.length < 4 ) {
@@ -26,7 +27,7 @@ async function agentLoop () {
                 current = [ 'up', 'right', 'down', 'left' ].filter( d => d != current )[ Math.floor(Math.random()*3) ];
             }
             
-            if ( ! tried.includes(current) ) {
+            if ( current && ! tried.includes(current) ) {
                 
                 if ( await socket.emitMove( current ) ) {
                     console.log( 'moved', current );
@@ -50,3 +51,15 @@ async function agentLoop () {
 }
 
 agentLoop()
+
+
+
+const oldLog = console.log;
+/**
+ * @param  {...any} message 
+ */
+global.console.log = function ( ...message ) {
+    socket.emitLog( ...message );
+    oldLog.apply( console, message );
+};
+

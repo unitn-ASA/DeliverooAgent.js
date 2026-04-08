@@ -10,7 +10,7 @@ async function myFn () {
     
 }
 
-// myFn ()
+myFn ()
 
 socket.on( 'tile', (x, y, delivery) => {
     console.log(x, y, delivery)

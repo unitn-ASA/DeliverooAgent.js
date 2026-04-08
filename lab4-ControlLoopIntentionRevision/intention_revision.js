@@ -3,6 +3,7 @@ import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
 
 const socket = DjsConnect();
 
+/** @type {} */
 function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
     const dx = Math.abs( Math.round(x1) - Math.round(x2) )
     const dy = Math.abs( Math.round(y1) - Math.round(y2) )
@@ -16,9 +17,9 @@ function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
  */
 
 /**
- * @type { {id:string, name:string, x:number, y:number, score:number} }
+ * @type { {id:string, name:string, x:number|undefined, y:number|undefined, score:number} }
  */
-const me = {id: null, name: null, x: null, y: null, score: null};
+const me = {id: '', name: '', x: undefined, y: undefined, score: 0};
 
 socket.onYou( ( {id, name, x, y, score} ) => {
     me.id = id
@@ -391,10 +392,10 @@ class BlindMove extends Plan {
             
             // this.log('me', me, 'xy', x, y);
 
-            if ( x > me.x )
+            if ( me.x && x > me.x )
                 moved_horizontally = await socket.emitMove('right')
                 // status_x = await this.subIntention( 'go_to', {x: me.x+1, y: me.y} );
-            else if ( x < me.x )
+            else if ( me.x && x < me.x )
                 moved_horizontally = await socket.emitMove('left')
                 // status_x = await this.subIntention( 'go_to', {x: me.x-1, y: me.y} );
 
@@ -405,10 +406,10 @@ class BlindMove extends Plan {
 
             if ( this.stopped ) throw ['stopped']; // if stopped then quit
 
-            if ( y > me.y )
+            if ( me.y && y > me.y )
                 moved_vertically = await socket.emitMove('up')
                 // status_x = await this.subIntention( 'go_to', {x: me.x, y: me.y+1} );
-            else if ( y < me.y )
+            else if ( me.y && y < me.y )
                 moved_vertically = await socket.emitMove('down')
                 // status_x = await this.subIntention( 'go_to', {x: me.x, y: me.y-1} );
 
