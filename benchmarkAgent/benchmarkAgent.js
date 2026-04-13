@@ -13,10 +13,7 @@ import depth_search_daemon from "./depth_search_daemon.js";
  * @type {import("@unitn-asa/deliveroo-js-sdk/types/IOParcel.js").IOParcel}
  */
 
-const client = DjsConnect(
-    'http://localhost:8080',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA5ZmQ2NDllNzZlIiwibmFtZSI6Im1hcmNvIiwiaWF0IjoxNjc5OTk3Njg2fQ.6_zmgL_C_9QgoOX923ESvrv2i2_1bgL_cWjMw4M7ah4'
-)
+const client = DjsConnect()
 const depth_search = depth_search_daemon(client);
 
 // function distance( {x:x1, y:y1}, {x:x2, y:y2}) {

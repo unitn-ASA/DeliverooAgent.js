@@ -64,9 +64,22 @@ export default function ( /**@type {DjsClientSocket}*/socket ) {
 
         function search (cost, x, y, previous_tile, action_from_previous) {
 
-            if( ! map.has(x+'_'+y) || map.get(x+'_'+y).type == '0' || map.get(x+'_'+y).locked )
-                return false;
+            const currentTile = map.get(x+'_'+y);
             
+            if ( ! currentTile || currentTile.type == '0' || currentTile.locked )
+                return false;
+
+            if ( previous_tile && ["←", "↑", "→", "↓"].includes(currentTile.type) ) {
+                if ( x == previous_tile.x + 1 && currentTile.type == '←' ) // I want right but there's a left arrow
+                    return false;
+                if ( x == previous_tile.x - 1 && currentTile.type == '→' ) // I want left but there's a right arrow
+                    return false;
+                if ( y == previous_tile.y + 1 && currentTile.type == '↓' ) // I want up but there's a down arrow
+                    return false;
+                if ( y == previous_tile.y - 1 && currentTile.type == '↑' ) // I want down but there's an up arrow
+                    return false;
+            }
+                
             const tile = map.get(x+'_'+y)
             if( tile.cost_to_here <= cost)
                 return false;
