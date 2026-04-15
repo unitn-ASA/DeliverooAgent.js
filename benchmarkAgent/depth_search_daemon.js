@@ -45,7 +45,7 @@ export default function ( /**@type {DjsClientSocket}*/socket ) {
         }
     } );
 
-    return function ( {x:init_x, y:init_y}, {x:target_x, y:target_y} ) {
+    return async function ( {x:init_x, y:init_y}, {x:target_x, y:target_y} ) {
         
         init_x = Math.round(init_x);
         init_y = Math.round(init_y);
@@ -62,7 +62,7 @@ export default function ( /**@type {DjsClientSocket}*/socket ) {
 
         // console.log('go from', me.x, me.y, 'to', target_x, target_y);
 
-        function search (cost, x, y, previous_tile, action_from_previous) {
+        async function search (cost, x, y, previous_tile, action_from_previous) {
 
             const currentTile = map.get(x+'_'+y);
             
@@ -110,14 +110,14 @@ export default function ( /**@type {DjsClientSocket}*/socket ) {
                 return distance({x: target_x, y: target_y}, {x: a[1], y: a[2]}) - distance({x: target_x, y: target_y}, {x: b[1], y: b[2]})
             } )
 
-            search( ...options[0] )
-            search( ...options[1] )
-            search( ...options[2] )
-            search( ...options[3] )
+            await search( ...options[0] )
+            await search( ...options[1] )
+            await search( ...options[2] )
+            await search( ...options[3] )
             
         }
 
-        search(0, init_x, init_y);
+        await search(0, init_x, init_y);
 
         // console.log('map.get', target_x+'_'+target_y, 'in', Array.from(map.values()).map( t => t.x+'_'+t.y ).join(', '))
         let dest = map.get(target_x+'_'+target_y);

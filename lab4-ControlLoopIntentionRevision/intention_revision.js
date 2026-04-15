@@ -3,7 +3,7 @@ import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
 
 const socket = DjsConnect();
 
-/** @type {} */
+/** @type { function ({x:number, y:number}, {x:number, y:number}): number } */
 function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
     const dx = Math.abs( Math.round(x1) - Math.round(x2) )
     const dy = Math.abs( Math.round(y1) - Math.round(y2) )
@@ -17,16 +17,16 @@ function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
  */
 
 /**
- * @type { {id:string, name:string, x:number|undefined, y:number|undefined, score:number} }
+ * @type { {id:string, name:string, x:number, y:number, score:number} }
  */
-const me = {id: '', name: '', x: undefined, y: undefined, score: 0};
+const me = {id: '', name: '', x: -1, y: -1, score: 0};
 
 socket.onYou( ( {id, name, x, y, score} ) => {
-    me.id = id
-    me.name = name
-    me.x = x
-    me.y = y
-    me.score = score
+    me.id = id;
+    me.name = name;
+    me.x = x ? x : -1;
+    me.y = y ? y : -1;
+    me.score = score;
 } )
 
 /**
@@ -56,6 +56,7 @@ function optionsGeneration () {
 
     /**
      * Options generation
+     * @type { Array< [string, ...any] > }
      */
     const options = []
     for (const parcel of parcels.values())
@@ -112,6 +113,7 @@ socket.onYou( optionsGeneration )
  */
 class IntentionRevision {
 
+    /** @type {IntentionDeliberation[]} */
     #intention_queue = new Array();
     get intention_queue () {
         return this.#intention_queue;
@@ -152,14 +154,28 @@ class IntentionRevision {
 
     // async push ( predicate ) { }
 
+    /** @type { function(...any): void } */
     log ( ...args ) {
         console.log( ...args )
     }
 
+    /**
+     * @abstract
+     * @param { [string, ...any] } predicate is in the form ['go_to', x, y]
+     */
+    async push ( predicate ) {
+    }
+
 }
 
+/**
+ * @extends { IntentionRevision }
+ */
 class IntentionRevisionQueue extends IntentionRevision {
 
+    /**
+     * @param { [string, ...any] } predicate is in the form ['go_to', x, y]
+     */
     async push ( predicate ) {
         
         // Check if already queued
@@ -167,7 +183,7 @@ class IntentionRevisionQueue extends IntentionRevision {
             return; // intention is already queued
 
         console.log( 'IntentionRevisionReplace.push', predicate );
-        const intention = new Intention( this, predicate );
+        const intention = new IntentionDeliberation( this, predicate );
         this.intention_queue.push( intention );
     }
 
@@ -175,6 +191,9 @@ class IntentionRevisionQueue extends IntentionRevision {
 
 class IntentionRevisionReplace extends IntentionRevision {
 
+    /**
+     * @param { [string, ...any] } predicate is in the form ['go_to', x, y]
+     */
     async push ( predicate ) {
 
         // Check if already queued
@@ -184,7 +203,7 @@ class IntentionRevisionReplace extends IntentionRevision {
         }
         
         console.log( 'IntentionRevisionReplace.push', predicate );
-        const intention = new Intention( this, predicate );
+        const intention = new IntentionDeliberation( this, predicate );
         this.intention_queue.push( intention );
         
         // Force current intention stop 
@@ -197,6 +216,9 @@ class IntentionRevisionReplace extends IntentionRevision {
 
 class IntentionRevisionRevise extends IntentionRevision {
 
+    /**
+     * @param { [string, ...any] } predicate is in the form ['go_to', x, y]
+     */
     async push ( predicate ) {
         console.log( 'Revising intention queue. Received', ...predicate );
         // TODO
@@ -219,20 +241,21 @@ myAgent.loop();
 
 
 /**
- * Intention
+ * IntentionDeliberation
  */
-class Intention {
+class IntentionDeliberation {
 
-    // Plan currently used for achieving the intention 
+    // Plan currently used for achieving the desire 
+    /** @type { Plan | undefined } */
     #current_plan;
     
-    // This is used to stop the intention
+    // This is used to stop the intentionDeliberation
     #stopped = false;
     get stopped () {
         return this.#stopped;
     }
     stop () {
-        // this.log( 'stop intention', ...this.#predicate );
+        // this.log( 'stop intentionDeliberation', ...this.#predicate );
         this.#stopped = true;
         if ( this.#current_plan)
             this.#current_plan.stop();
@@ -244,21 +267,24 @@ class Intention {
     #parent;
 
     /**
-     * @type { any[] } predicate is in the form ['go_to', x, y]
+     * Desire to be achieved, for example ['go_to', x, y]
+     * @type { [string, ...any] } predicate is in the form ['go_to', x, y]
      */
+    #predicate;
     get predicate () {
         return this.#predicate;
     }
-    /**
-     * @type { any[] } predicate is in the form ['go_to', x, y]
-     */
-    #predicate;
 
+    /**
+     * @param { IntentionDeliberation } parent 
+     * @param { [string, ...any] } predicate 
+     */
     constructor ( parent, predicate ) {
         this.#parent = parent;
         this.#predicate = predicate;
     }
 
+    /** @type { function(...any): void } */
     log ( ...args ) {
         if ( this.#parent && this.#parent.log )
             this.#parent.log( '\t', ...args )
@@ -269,11 +295,12 @@ class Intention {
     #started = false;
     /**
      * Using the plan library to achieve an intention
+     * @returns { Promise<boolean> } the result of the plan execution
      */
     async achieve () {
         // Cannot start twice
         if ( this.#started)
-            return this;
+            return false;
         else
             this.#started = true;
 
@@ -290,9 +317,9 @@ class Intention {
                 this.log('achieving intention', ...this.predicate, 'with plan', planClass.name);
                 // and plan is executed and result returned
                 try {
-                    const plan_res = await this.#current_plan.execute( ...this.predicate );
+                    const plan_res = await this.#current_plan?.execute( ...this.predicate );
                     this.log( 'succesful intention', ...this.predicate, 'with plan', planClass.name, 'with result:', plan_res );
-                    return plan_res
+                    return plan_res || false;
                 // or errors are caught so to continue with next plan
                 } catch (error) {
                     this.log( 'failed intention', ...this.predicate,'with plan', planClass.name, 'with error:', error );
@@ -312,11 +339,33 @@ class Intention {
 }
 
 /**
+ * @typedef { {
+ *      stop: ()=>void,
+ *      stopped: boolean,
+ *      log: (...arg0: any[])=>void,
+ *      subIntention: (predicate: any) => Promise<any>,
+ *      execute: function (string, ...any) : Promise<boolean>
+ * } } Plan
+ */
+
+/**
+ * @typedef { {
+ *      name: string,
+ *      isApplicableTo: function (string, ...any) : boolean,
+ *      prototype: Plan
+ * } } PlanClass
+ */
+
+/**
  * Plan library
+ * @type { PlanClass [] }
  */
 const planLibrary = [];
 
-class Plan {
+/**
+ * @abstract
+ */
+class PlanBase {
 
     // This is used to stop the plan
     #stopped = false;
@@ -336,10 +385,14 @@ class Plan {
      */
     #parent;
 
+    /**
+     * @param { PlanBase } parent
+     */
     constructor ( parent ) {
         this.#parent = parent;
     }
 
+    /** @type { function(...any): void } */
     log ( ...args ) {
         if ( this.#parent && this.#parent.log )
             this.#parent.log( '\t', ...args )
@@ -348,22 +401,36 @@ class Plan {
     }
 
     // this is an array of sub intention. Multiple ones could eventually being achieved in parallel.
+    /** @type { IntentionDeliberation [] } */
     #sub_intentions = [];
 
+    /**
+     * @param { [string, ...any] } predicate 
+     * @returns { Promise<boolean> }
+     */
     async subIntention ( predicate ) {
-        const sub_intention = new Intention( this, predicate );
+        const sub_intention = new IntentionDeliberation( this, predicate );
         this.#sub_intentions.push( sub_intention );
         return sub_intention.achieve();
     }
 
 }
 
-class GoPickUp extends Plan {
+/**
+ * @implements { Plan }
+ */
+class GoPickUp extends PlanBase {
 
+    /**
+     * @type { function( string, ...any ) : boolean } 
+     */
     static isApplicableTo ( go_pick_up, x, y, id ) {
         return go_pick_up == 'go_pick_up';
     }
 
+    /**
+     * @type { function( string, ...any ) : Promise<boolean> } 
+     */
     async execute ( go_pick_up, x, y ) {
         if ( this.stopped ) throw ['stopped']; // if stopped then quit
         await this.subIntention( ['go_to', x, y] );
@@ -375,12 +442,22 @@ class GoPickUp extends Plan {
 
 }
 
-class BlindMove extends Plan {
+/**
+ * @implements { Plan }
+ * @extends { PlanBase }
+ */
+class BlindMove extends PlanBase {
 
+    /**
+     * @type { function( string, ...any ) : boolean } 
+     */
     static isApplicableTo ( go_to, x, y ) {
         return go_to == 'go_to';
     }
 
+    /**
+     * @type { function( string, ...any ) : Promise<boolean> } 
+     */
     async execute ( go_to, x, y ) {
 
         while ( me.x != x || me.y != y ) {

@@ -3,20 +3,22 @@ import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
 
 const socket = DjsConnect();
 
+/** @type { function ({x:number, y:number}, {x:number, y:number}): number } */
 function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
     const dx = Math.abs( Math.round(x1) - Math.round(x2) )
     const dy = Math.abs( Math.round(y1) - Math.round(y2) )
     return dx + dy;
 }
 
+/** @type { {id:string, name:string, x:number, y:number, score:number} } */
 const me = {};
 
 socket.onYou( ( {id, name, x, y, score} ) => {
-    me.id = id
-    me.name = name
-    me.x = x
-    me.y = y
-    me.score = score
+    me.id = id;
+    me.name = name;
+    me.x = x ? x : me.x;
+    me.y = y ? y : me.y;
+    me.score = score;
 } )
 
 var control = false;
