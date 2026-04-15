@@ -36,9 +36,12 @@ style: |
 
 <!-- _class: lead -->
 
-# First Challenge - April 21st, 2026
+# First Challenge - May 5th, 2026
 
 Testing your agents togheter in the Deliveroo.js environment, no matter the performance or the final results, the goal of this challenge is to test and improve your agents in an environment with multiple agents.
+
+### April 21st support
+### April 22st no class (ICT Days)
 
 ---
 
