@@ -33,7 +33,7 @@ await new Promise( res => {
         me.x = x
         me.y = y
         me.score = score
-        // console.log( 'me:', me.x, me.y );
+        console.log( 'me:', me.x, me.y );
         res(null);
     } )
 } );
@@ -58,10 +58,13 @@ while ( me.x != target.x || me.y != target.y ) {
     
     if ( me?.y && me.y < target.y )
         await socket.emitMove('up');
-    else if ( me?.y && me.y > target.y )
+    else if ( me?.y && me.y > target.y ) {
         await socket.emitMove('down');
+        // me.y -= 1;
+    }
 
     await m;
+    console.log(me.name, 'Moved to', me.x, me.y);
 }
 
 socket.onSensing( async ( sensing ) => {

@@ -6,7 +6,7 @@ function spawnProcesses() {
     for ( let i = 0; i < 5; i++ ) {
         const name = 'm_'+i;
         
-        const childProcess = spawn( `TOKEN='' NAME=${name} node intention_revision.js`, { shell: true } );
+        const childProcess = spawn( `TOKEN='' NAME=${name} node benchmarkAgent.js`, { shell: true } );
 
         childProcess.stdout.on('data', data => {
             console.log(`Output from ${name}: ${data}`);

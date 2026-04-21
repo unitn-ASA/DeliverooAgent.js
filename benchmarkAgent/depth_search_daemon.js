@@ -1,5 +1,6 @@
 import { DjsClientSocket } from "@unitn-asa/deliveroo-js-sdk/client";
 
+/** @type { function ({x:number, y:number}, {x:number, y:number}): number } */
 function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
     const dx = Math.abs( Math.round(x1) - Math.round(x2) )
     const dy = Math.abs( Math.round(y1) - Math.round(y2) )
@@ -8,7 +9,9 @@ function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
 
 export default function ( /**@type {DjsClientSocket}*/socket ) {
     
+    /** @type { number } */
     var OBSERVATION_DISTANCE
+    /** @type { number } */
     var MOVEMENT_DURATION
     socket.onConfig( (config) => {
         OBSERVATION_DISTANCE = config.GAME.player.observation_distance;
@@ -17,7 +20,7 @@ export default function ( /**@type {DjsClientSocket}*/socket ) {
     
     /**
      * @typedef tile
-     * @type { { x: number, y: number, type: string, locked?: boolean, cost_to_here?: number, previous_tile?: tile, action_from_previous? } }
+     * @type { { x: number, y: number, type: string, locked?: boolean, cost_to_here?: number, previous_tile?: tile, action_from_previous?: string } }
      */
     /**
      * @type {Map<string, tile>}
@@ -28,10 +31,10 @@ export default function ( /**@type {DjsClientSocket}*/socket ) {
         map.set(x+'_'+y, {x, y, type})
     } );
     
-    var me = {x:undefined, y:undefined};
+    var me = {x:-1, y:-1};
     socket.onYou( ( {x, y} ) => {
-        me.x = x;
-        me.y = y;
+        me.x = x ? x : me.x;
+        me.y = y ? y : me.y;
     } );
 
     const agents = new Map()
@@ -62,6 +65,15 @@ export default function ( /**@type {DjsClientSocket}*/socket ) {
 
         // console.log('go from', me.x, me.y, 'to', target_x, target_y);
 
+        /**
+         * 
+         * @param {number} cost 
+         * @param {number} x 
+         * @param {number} y 
+         * @param {tile} previous_tile 
+         * @param {string} action_from_previous 
+         * @returns 
+         */
         async function search (cost, x, y, previous_tile, action_from_previous) {
 
             const currentTile = map.get(x+'_'+y);

@@ -34,12 +34,12 @@ function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
  * Beliefset revision function
  */
 /** @type  {me } */
-const me = { id:undefined, name:undefined, x:undefined, y:undefined, score:undefined, carrying: new Map() };
+const me = { id:'', name:'', x:-1, y:-1, score:0, carrying: new Map() };
 client.onYou( ( {id, name, x, y, score} ) => {
     me.id = id
     me.name = name
-    me.x = x
-    me.y = y
+    me.x = x ? x : me.x
+    me.y = y ? y : me.y
     me.score = score
 } )
 
