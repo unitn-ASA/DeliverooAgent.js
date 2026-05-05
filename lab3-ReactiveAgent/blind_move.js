@@ -20,6 +20,9 @@ const map = new Map()
 socket.onTile( ({x, y, type}) => {
     const key = `${x}_${y}`;
     map.set(key, {x, y, type});
+    if (type.toString() == '0') {
+        //TODO
+    }
 } );
 
 
@@ -90,3 +93,11 @@ socket.onSensing( async ( sensing ) => {
     // }
 
 } )
+
+
+// while ( true) {
+//     socket.emitMove('up');
+//     await new Promise( res => setTimeout(res, 0) );
+// }
+
+socket.onConfig( config => { config.GAME } );

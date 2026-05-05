@@ -5,6 +5,7 @@
       "sourceMap": true,
       "allowJs": true,
       "checkJs": true,
+      "noImplicitAny": false,
       "moduleResolution": "nodenext"
     },
     "exclude": [

@@ -1,18 +1,30 @@
 import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
-import { default as argsParser } from "args-parser";
+import { ArgumentParser } from "argparse";
 
 const client = DjsConnect() // expect to get host and token from cmd args
 await new Promise( res => client.onYou( res ) );
 
-const args = argsParser(process.argv);
+const parser = new ArgumentParser({ description: 'Deliveroo agent' });
+parser.add_argument('--teamId', { help: 'Team agent ID' });
+const args = parser.parse_args();
 let teamAgentId = args['teamId'];
 
 var currentIntention = null;
 var pickupCoordination = {};
 
-client.onMsg( async (id, name, /**@type {{action:string,parcelId:string}}*/msg, reply) => {
-    
-    if ( msg?.action == 'pickup' ) {
+/**
+ * @param {unknown} value
+ * @returns {value is { action: string, parcelId: string }}
+ */
+function isPickupMsg(value) {
+    return typeof value === 'object' && value !== null &&
+            'action' in value && value.action === 'pickup' &&
+            'parcelId' in value;
+}
+
+client.onMsg( async (id, name, msg, reply) => {
+
+    if ( isPickupMsg(msg) ) {
         
         // wait between 0-100ms before replying, in case the other agent is also replying
         await new Promise( resolve => setTimeout(resolve, Math.random()*50) );
@@ -33,7 +45,7 @@ client.onMsg( async (id, name, /**@type {{action:string,parcelId:string}}*/msg, 
 
 });
 
-client.onParcelsSensing( async (parcels) => {
+client.onSensing( async ({parcels}) => {
     // if there are parcels and I'm not already doing something
     if ( parcels.length > 0  && ! currentIntention) {
         let parcel = parcels[0];
