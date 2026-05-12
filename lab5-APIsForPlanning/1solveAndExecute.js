@@ -39,7 +39,9 @@ async function main () {
     }
     console.log( plan );
     
-    const pddlExecutor = new PddlExecutor( { name: 'lightOn', executor: (/** @type {string} */ l)=>console.log('exec lighton '+l) } );
+    const pddlExecutor = new PddlExecutor(
+        { name: 'lightOn', executor: (/** @type {string} */ l)=>console.log('exec lighton '+l) }
+    );
     pddlExecutor.exec( plan );
 
 }

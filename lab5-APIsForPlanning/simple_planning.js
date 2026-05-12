@@ -1,4 +1,4 @@
-import { onlineSolver, PddlDomain, PddlAction, PddlExecutor, PddlProblem, Planner, Beliefset } from "../index.js";
+import { onlineSolver, PddlDomain, PddlAction, PddlExecutor, PddlProblem, Planner, Beliefset } from "@unitn-asa/pddl-client";
 
 Planner.doPlan = onlineSolver;
 

@@ -1,7 +1,7 @@
 
 # APIs for Planning
 
-`npm install @unitn-asa/pddl-client`@0.0.37
+`npm install @unitn-asa/pddl-client`@1.7.7
 
 Based on https://solver.planning.domains:5001.
 

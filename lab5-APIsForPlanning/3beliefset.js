@@ -37,7 +37,7 @@ async function main () {
         'lights',
         myBeliefset.objects.join(' '),
         myBeliefset.toPddlString(),
-        'and (switched-on light1) (not (switched-on light2))'
+        `and (switched-on light1) (not (switched-on light2))`
     )
     
     let problem = pddlProblem.toPddlString();
