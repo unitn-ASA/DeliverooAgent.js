@@ -7,7 +7,7 @@ function spawnProcesses() {
     for (let i = 0; i < 40; i++) {
         let name = `ddos${i}`;
         const childProcess = spawn(
-            `nodemon ddos_one.js name=${name}`,
+            `NAME=${name} nodemon ddos_one.js`,
             { shell: true }
         );
 

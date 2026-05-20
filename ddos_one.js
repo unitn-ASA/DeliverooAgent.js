@@ -3,6 +3,9 @@ import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
 
 const socket = DjsConnect();
 
+let me = await new Promise( res => socket.onYou( res ) );
+let name = me.name;
+
 // const client2 = DjsConnect(
 //     'http://localhost:8080/?name=ddos', client.token
 //     // 'https://deliveroojs.onrender.com/?name=ddos', client.token
@@ -23,11 +26,9 @@ async function loop1() {
 }
 async function loop2() {
     let i = 0;
-    let name = (await socket.me).name;
     while (true) {
-        console.log('say');
-        socket.emitSay( '73d6d9', `hello ${i++} from ddos${name}` );
-        await new Promise(resolve => setTimeout(resolve, 0));
+        await socket.emitShout( `hello ${i++} from ${name} Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum` );
+        await new Promise(resolve => setTimeout(resolve, 100));
     }
 }
 
