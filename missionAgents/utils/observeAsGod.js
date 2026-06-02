@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
 // import EventEmitter from 'events';
 
@@ -16,9 +15,13 @@ import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
 
 /**
  * @param { import("@unitn-asa/deliveroo-js-sdk/client/DjsClientSocket.js").DjsClientSocket } socket
- * @param { { onDelivery: function( {agentId:string, parcels:IOParcelEnhanced[]} ) : void } } listeners
+ * @param { { onDelivery?: function( {agentId:string, parcels:IOParcelEnhanced[], reward:number} ) : void,
+ *            onPutdown?: function( {agentId:string, parcels:IOParcelEnhanced[]} ) : void,
+ *            onPickup?: function( {agentId:string, parcels:IOParcelEnhanced[]} ) : void,
+ *            onMove?: function( {agentId:string, agentName:string, x:number, y:number} ) : void
+ *          } } listeners
  */
-export async function observeAsGod ( socket, { onDelivery } ) {
+export async function observeAsGod ( socket, { onDelivery, onPutdown, onPickup, onMove } ) {
     
     // /**
     //  * @type {EventEmitter<{
@@ -57,15 +60,21 @@ export async function observeAsGod ( socket, { onDelivery } ) {
         // Update tracked agents
         for (const a of sensing.agents) {
             var known = trackedAgents.get(a.id);
+            // if we never saw this agent before
             if ( ! known ) {
                 known = {...a, connected: true};
                 trackedAgents.set( a.id, known );
             }
-            else {
+            // else if coordinates are valid
+            else if ( a.x != null && a.y != null ) {
                 if ( known.x != a.x || known.y != a.y ) {
                     known.x = a.x;
                     known.y = a.y;
-                    // eventEmitter.emit('agent xy', known);
+                    // if movement is completed and agent is in a tile
+                    if ( a.x%1 == 0 && a.y%1 == 0 && onMove ) {
+                        onMove({ agentId: a.id, agentName: a.name, x: a.x, y: a.y });
+                        // eventEmitter.emit('agent xy', known);
+                    }
                 }
                 if ( known.score != a.score ) {
                     known.score = a.score;
@@ -103,7 +112,16 @@ export async function observeAsGod ( socket, { onDelivery } ) {
             if ( tracked ) {
                 tracked.x = p.x;
                 tracked.y = p.y;
-                tracked.carriedBy = p.carriedBy;
+                // Parcel changed carrier, update info and trigger events
+                if ( tracked.carriedBy != p.carriedBy ) {
+                    // Parcel was put down
+                    if ( tracked.carriedBy && ! p.carriedBy )
+                        if ( onPutdown ) onPutdown({ agentId: tracked.carriedBy, parcels: [tracked] });
+                    // Parcel was picked up
+                    else if ( ! tracked.carriedBy && p.carriedBy )
+                        if ( onPickup ) onPickup({ agentId: p.carriedBy, parcels: [tracked] });
+                    tracked.carriedBy = p.carriedBy;
+                }
                 tracked.reward = p.reward;
             }
         }
@@ -150,7 +168,7 @@ export async function observeAsGod ( socket, { onDelivery } ) {
             let simultaneouslyDeliveredParcels = delivered.filter( p => p.deliveredBy == agentId )
             // eventEmitter.emit( 'agentHasDelivered', {agentId, parcels: simultaneouslyDeliveredParcels} );
             if (onDelivery)
-                process.nextTick( () => onDelivery({ agentId, parcels: simultaneouslyDeliveredParcels}) );
+                process.nextTick( () => onDelivery({ agentId, parcels: simultaneouslyDeliveredParcels, reward: simultaneouslyDeliveredParcels.reduce((sum, p) => sum + p.reward, 0) }) );
         }
     } )
 
