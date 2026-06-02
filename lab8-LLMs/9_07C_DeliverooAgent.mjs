@@ -16,6 +16,7 @@ if (!apiKey) {
   console.error("Error: missing LITELLM_API_KEY in .env file");
   process.exit(1);
 }
+console.log(`Using OpenAI-like service at ${baseURL} with model ${MODEL} and token ${apiKey}`);
 
 // ==========================================
 // 2. OpenAI-compatible client
