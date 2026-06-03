@@ -7,6 +7,7 @@ import { observeAsGod } from "./utils/observeAsGod.js";
 const parser = new ArgumentParser({ description: 'GoTo Mission Agent - Agent receives bonus for reaching specific coordinates' });
 parser.add_argument('--bonus', { help: 'Bonus reward value', type: 'int', default: -1000 });
 parser.add_argument('--prompt', { help: 'Mission prompt' });
+parser.add_argument('--unatantum', { help: 'If set, the mission can be achieved only once by a single agent', default: true });
 parser.add_argument('--coordinates', { help: 'Target coordinates as JSON array', default: JSON.stringify([
     {"x": 11, "y": 12},
     {"x": 12, "y": 12},
@@ -15,37 +16,30 @@ parser.add_argument('--coordinates', { help: 'Target coordinates as JSON array',
 const args = parser.parse_args();
 
 const BONUS_REWARD = args['bonus'];
-const coordinates = JSON.parse(args['coordinates']);
+const UNATANTUM = JSON.parse(args['unatantum'] || false);
+console.log('UNATANTUM:', UNATANTUM);
+const COORDINATES = JSON.parse(args['coordinates']);
 const PROMPT = (args['prompt'] || 'Go to one of these coordinates to receive a bonus.')
-                + ` Bonus is ${BONUS_REWARD}pts. Coordinates are ${JSON.stringify(coordinates)}`;
+                + ` Bonus is ${BONUS_REWARD}pts. Coordinates are ${JSON.stringify(COORDINATES)}`;
 
 const socket = DjsConnect( process.env.HOST, process.env.ADMIN_TOKEN );
 
-/**
- * @type {{id:string}}
- */
-const me = await new Promise( res => {
-    socket.onceYou( me => {
-        res( me );
-    } )
-} );
-
 /** @type {string[]} */
 const missionAchievedAgentIds = [];
-socket.onSensing( async ( sensing ) => {
-    const candidates = sensing.agents.filter( a => coordinates.map( xy => xy.x+','+xy.y ).includes( a.x+','+a.y ) );
-    for (const c of candidates) {
-        if ( ! missionAchievedAgentIds.includes( c.id ) ) {
-            missionAchievedAgentIds.push( c.id );
 
-            // Log msg on chat and console
-            const msg = 'Rewarded agent ' + c.name + ' for being at coordinates ' + c.x + ',' + c.y;
-            console.log( msg );
-            // Tell to myself in the chat
-            socket.emitSay( me.id, msg );
+const {emitReward} = await observeAsGod(socket, {
+    onMove: ({agentId, agentName, x, y}) => {
+        
+        // Check if the new coordinates are among the target coordinates
+        if ( COORDINATES.map( xy => xy.x+','+xy.y ).includes( x+','+y ) ) {
 
-            // Assign reward to the agent
-            socket.emit( 'reward', {agentId: c.id, points:BONUS_REWARD} );
+            // Check if the agent has not already achieved the mission or if the mission can be achieved multiple times by the same agent
+            if ( ! missionAchievedAgentIds.includes( agentId ) || ! UNATANTUM ) {
+                missionAchievedAgentIds.push( agentId );
+
+                // Reward the agent for reaching the target coordinates
+                emitReward(agentId, BONUS_REWARD, 'reached coordinates ' + x + ',' + y);
+            }
         }
     }
 } );

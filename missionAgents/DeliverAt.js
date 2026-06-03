@@ -7,6 +7,7 @@ import { observeAsGod } from "./utils/observeAsGod.js";
 const parser = new ArgumentParser({ description: 'Do Putdown At Mission Agent - Bonus for delivering at specific coordinates (one-time per agent)' });
 parser.add_argument('--bonus', { help: 'Bonus reward value', type: 'int', default: 100 });
 parser.add_argument('--prompt', { help: 'Mission prompt' });
+parser.add_argument('--unatantum', { help: 'If set, the mission can be achieved only once by a single agent', default: true });
 parser.add_argument('--coordinates', { help: 'Target coordinates as JSON array', default: JSON.stringify([
     {"x": 11, "y": 12},
     {"x": 12, "y": 12},
@@ -15,9 +16,10 @@ parser.add_argument('--coordinates', { help: 'Target coordinates as JSON array',
 const args = parser.parse_args();
 
 const BONUS_REWARD = args['bonus'];
-const coordinates = JSON.parse(args['coordinates']);
+const UNATANTUM = Boolean(args['unatantum']);
+const COORDINATES = JSON.parse(args['coordinates']);
 const PROMPT = (args['prompt'] || 'Deliver at specific coordinates to receive a bonus.')
-                + ` Bonus is ${BONUS_REWARD}pts. Coordinates are ${JSON.stringify(coordinates)}. This is a one-time bonus per agent.`;
+                + ` Bonus is ${BONUS_REWARD}pts. Coordinates are ${JSON.stringify(COORDINATES)}. This is a one-time bonus per agent.`;
 
 
 
@@ -28,22 +30,19 @@ const socket = DjsConnect( process.env.HOST, process.env.ADMIN_TOKEN );
 /** @type {string[]} */
 const missionAchievedAgentIds = [];
 
-const { me, trackedAgents, trackedParcels } = await observeAsGod(socket, {
+const { me, trackedAgents, trackedParcels, emitReward } = await observeAsGod(socket, {
     onDelivery: ({agentId, parcels}) => {
 
-        // Check if the agent has not already achieved the mission and if the delivery includes any of the target coordinates
-        if ( ! missionAchievedAgentIds.includes( agentId ) && parcels.some( p => coordinates.map( xy => xy.x+','+xy.y ).includes( p.x+','+p.y ) ) ) {
+        // Check if the delivery includes any of the target coordinates
+        if ( parcels.some( p => COORDINATES.map( xy => xy.x+','+xy.y ).includes( p.x+','+p.y ) ) ) {
+        
+            // Check if the agent has not already achieved the mission and
+            if ( ! missionAchievedAgentIds.includes( agentId ) || ! UNATANTUM ) {
+                missionAchievedAgentIds.push( agentId );
 
-            // Award the bonus and mark the mission as achieved for this agent
-            missionAchievedAgentIds.push( agentId );
-            socket.emit( 'reward', {agentId, points:BONUS_REWARD} )
-
-            // Log msg on chat and console
-            let deliveredByNameOrId = trackedAgents.get(agentId)?.name || agentId;
-            let msg = `BONUS +${BONUS_REWARD} to ${deliveredByNameOrId}, who delivered at ${coordinates}`;
-            console.log( msg);
-            socket.emitSay( me.id, msg );
-
+                // Reward the agent for delivering at the target coordinates
+                emitReward(agentId, BONUS_REWARD, `delivered at target coordinates (${trackedAgents.get(agentId)?.x},${trackedAgents.get(agentId)?.y})`);
+            }
         }
     }
 } );

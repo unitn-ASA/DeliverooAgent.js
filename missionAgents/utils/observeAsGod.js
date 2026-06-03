@@ -15,9 +15,9 @@ import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
 
 /**
  * @param { import("@unitn-asa/deliveroo-js-sdk/client/DjsClientSocket.js").DjsClientSocket } socket
- * @param { { onDelivery?: function( {agentId:string, parcels:IOParcelEnhanced[], reward:number} ) : void,
- *            onPutdown?: function( {agentId:string, parcels:IOParcelEnhanced[]} ) : void,
- *            onPickup?: function( {agentId:string, parcels:IOParcelEnhanced[]} ) : void,
+ * @param { { onDelivery?: function( {agentId:string, agentName:string, parcels:IOParcelEnhanced[], reward:number} ) : void,
+ *            onPutdown?: function( {agentId:string, agentName:string, parcels:IOParcelEnhanced[]} ) : void,
+ *            onPickup?: function( {agentId:string, agentName:string, parcels:IOParcelEnhanced[]} ) : void,
  *            onMove?: function( {agentId:string, agentName:string, x:number, y:number} ) : void
  *          } } listeners
  */
@@ -67,12 +67,11 @@ export async function observeAsGod ( socket, { onDelivery, onPutdown, onPickup, 
             }
             // else if coordinates are valid
             else if ( a.x != null && a.y != null ) {
-                if ( known.x != a.x || known.y != a.y ) {
-                    known.x = a.x;
-                    known.y = a.y;
-                    // if movement is completed and agent is in a tile
-                    if ( a.x%1 == 0 && a.y%1 == 0 && onMove ) {
-                        onMove({ agentId: a.id, agentName: a.name, x: a.x, y: a.y });
+                if ( known.x != Math.round(a.x) || known.y != Math.round(a.y) ) {
+                    known.x = Math.round(a.x);
+                    known.y = Math.round(a.y);
+                    if ( onMove ) {
+                        onMove({ agentId: a.id, agentName: a.name, x: known.x, y: known.y });
                         // eventEmitter.emit('agent xy', known);
                     }
                 }
@@ -116,10 +115,10 @@ export async function observeAsGod ( socket, { onDelivery, onPutdown, onPickup, 
                 if ( tracked.carriedBy != p.carriedBy ) {
                     // Parcel was put down
                     if ( tracked.carriedBy && ! p.carriedBy )
-                        if ( onPutdown ) onPutdown({ agentId: tracked.carriedBy, parcels: [tracked] });
+                        if ( onPutdown ) onPutdown({ agentId: tracked.carriedBy, agentName: trackedAgents.get(tracked.carriedBy)?.name || tracked.carriedBy, parcels: [tracked] });
                     // Parcel was picked up
                     else if ( ! tracked.carriedBy && p.carriedBy )
-                        if ( onPickup ) onPickup({ agentId: p.carriedBy, parcels: [tracked] });
+                        if ( onPickup ) onPickup({ agentId: p.carriedBy, agentName: trackedAgents.get(p.carriedBy)?.name || p.carriedBy, parcels: [tracked] });
                     tracked.carriedBy = p.carriedBy;
                 }
                 tracked.reward = p.reward;
@@ -167,10 +166,23 @@ export async function observeAsGod ( socket, { onDelivery, onPutdown, onPickup, 
         for ( let agentId of agentDelivering ) {
             let simultaneouslyDeliveredParcels = delivered.filter( p => p.deliveredBy == agentId )
             // eventEmitter.emit( 'agentHasDelivered', {agentId, parcels: simultaneouslyDeliveredParcels} );
+            let agentName = trackedAgents.get(agentId)?.name || agentId;
             if (onDelivery)
-                process.nextTick( () => onDelivery({ agentId, parcels: simultaneouslyDeliveredParcels, reward: simultaneouslyDeliveredParcels.reduce((sum, p) => sum + p.reward, 0) }) );
+                process.nextTick( () => onDelivery({ agentId, agentName, parcels: simultaneouslyDeliveredParcels, reward: simultaneouslyDeliveredParcels.reduce((sum, p) => sum + p.reward, 0) }) );
         }
     } )
 
-    return { me, trackedAgents, trackedParcels };
+    function emitReward ( agentId, points, reason ) {
+        const agent = trackedAgents.get( agentId );
+        const agentName = agent ? agent.name : agentId;
+        const msg = `${points > 0 ? 'Rewarded' : 'Penalized'} ${agentName} with ${Math.abs(points)}pts because: ${reason}`;
+
+        // Log on console and tell to myself in the chat
+        console.log( msg );
+        socket.emitSay( me.id, msg );
+        // Assign reward to the agent
+        socket.emit( 'reward', {agentId, points} );
+    }
+
+    return { me, trackedAgents, trackedParcels, emitReward };
 }

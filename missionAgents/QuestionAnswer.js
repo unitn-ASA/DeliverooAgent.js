@@ -13,7 +13,7 @@ const args = parser.parse_args();
 
 const BONUS_REWARD = args['bonus'];
 const QUESTION = args['question'];
-const ANSWERS = JSON.parse(args['answers']);
+const ANSWERS = args['answers'].split(' ').map( ans => String(ans).toLowerCase() );
 const PROMPT = (args['prompt'] || QUESTION + ' Reply with your answer to receive a bonus.')
                 + ` Bonus is ${BONUS_REWARD}pts.`;
 
@@ -21,19 +21,16 @@ const PROMPT = (args['prompt'] || QUESTION + ' Reply with your answer to receive
 
 const socket = DjsConnect( process.env.HOST, process.env.ADMIN_TOKEN );
 
-const { me, trackedAgents, trackedParcels } = await observeAsGod(socket, {} );
+const { me, trackedAgents, trackedParcels, emitReward } = await observeAsGod(socket, {} );
 
+/** @type {string[]} */
+const missionAchievedAgentIds = [];
 socket.onMsg( async ( agentId, agentName, msg ) => {
-    if ( ANSWERS.includes( JSON.stringify(msg).toLowerCase() ) ) {
+    if ( ! missionAchievedAgentIds.includes( agentId ) && ANSWERS.includes( String(msg).toLowerCase() ) ) {
+        missionAchievedAgentIds.push( agentId );
 
-        // Log msg on console and Tell to myself in the chat
-        const responseMsg = 'Rewarded agent ' + agentName + ' for answering correctly to the question';
-        console.log( responseMsg );
-        socket.emitSay( me.id, responseMsg );
-
-        // Assign reward to the agent
-        socket.emit( 'reward', {agentId: agentId, points:BONUS_REWARD} );
-
+        // Reward the agent for answering correctly
+        emitReward(agentId, BONUS_REWARD, 'answered correctly');
     }
 } );
 

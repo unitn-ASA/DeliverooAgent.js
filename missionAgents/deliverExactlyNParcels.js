@@ -19,18 +19,12 @@ const PROMPT = (args['prompt'] || 'From now on, whoever delivers exactly ' + PAR
 
 const socket = DjsConnect( process.env.HOST, process.env.ADMIN_TOKEN );
 
-const { me, trackedAgents, trackedParcels } = await observeAsGod(socket, {
+const { me, trackedAgents, trackedParcels, emitReward } = await observeAsGod(socket, {
     onDelivery: ({agentId, parcels}) => {
         if ( parcels.length == PARCELS_NUMBER ) {
 
-            // Log msg on chat and console
-            const msg = 'Rewarded agent ' + agentId + ' for deliverying exactly ' + PARCELS_NUMBER + ' parcels';
-            console.log( msg );
-            // Tell to myself in the chat
-            socket.emitSay( me.id, msg );
-
             // Assign reward to the agent
-            socket.emit( 'reward', {agentId, points:BONUS_REWARD} )
+            emitReward(agentId, BONUS_REWARD, 'delivered exactly ' + PARCELS_NUMBER + ' parcels');
         }
     }
 } );

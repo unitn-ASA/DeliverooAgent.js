@@ -21,20 +21,14 @@ const socket = DjsConnect( process.env.HOST, process.env.ADMIN_TOKEN );
 
 
 
-const { me, trackedAgents, trackedParcels } = await observeAsGod(socket, {
+const { me, trackedAgents, trackedParcels, emitReward } = await observeAsGod(socket, {
     onDelivery: ({agentId, parcels, reward}) => {
 
         // Check if the delivery includes any of the target coordinates
         if ( reward <= THRESHOLD ) {
 
-            // Award the bonus
-            socket.emit( 'reward', {agentId, points:BONUS_REWARD} )
-
-            // Log msg on chat and console
-            let deliveredByNameOrId = trackedAgents.get(agentId)?.name || agentId;
-            let msg = `BONUS +${BONUS_REWARD} to ${deliveredByNameOrId}, who delivered ${parcels.length} parcels for a total of ${reward}pts.`;
-            console.log( msg);
-            socket.emitSay( me.id, msg );
+            // Reward the agent for delivering parcels for a total reward lower or equal to the threshold
+            emitReward(agentId, BONUS_REWARD, 'delivered parcels for a total reward of ' + reward + 'pts, which is lower or equal to the threshold of ' + THRESHOLD + 'pts');
 
         }
     }

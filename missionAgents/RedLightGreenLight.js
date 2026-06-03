@@ -15,7 +15,7 @@ const args = parser.parse_args();
  * - Someone initially picked up the parcel
  * - Later a DIFFERENT agent does the final delivery putdown
  */
-const BONUS_REWARD = args['bonus'];
+const BONUS_REWARD = args['bonus'] || -10; // Default to -1000 if not provided
 const PROMPT = (args['prompt'] || 'All agents prepare to stop at red light and wait for the green light message before moving again, as in a “red light, green light” game.')
                 + ` Bonus is ${BONUS_REWARD}pts.`;
 
@@ -24,18 +24,13 @@ const socket = DjsConnect( process.env.HOST, process.env.ADMIN_TOKEN );
 /** @type {string[]} */
 const moved = [];
 
-const { me, trackedAgents, trackedParcels } = await observeAsGod(socket, {
+const { me, trackedAgents, trackedParcels, emitReward } = await observeAsGod(socket, {
     onMove: ({agentId, agentName}) => {
-        if ( light == 'red' && !moved.includes(agentId) ) {
+        if ( light == 'red' ) {
             moved.push(agentId);
 
-            // Log msg on chat and Tell to myself in the chat
-            let msg = `${agentName} moved during red light!`;
-            console.log( msg);
-            socket.emitSay( me.id, msg );
-
-            // Assign reward to the agent
-            socket.emit( 'reward', {agentId, points:BONUS_REWARD} )
+            // Penalize the agent for moving during red light
+            emitReward(agentId, BONUS_REWARD, 'moved during red light');
         }
     }
 } );
@@ -59,14 +54,14 @@ setInterval( () => {
     }
     // Red light
     else {
-        setTimeout(() => {light = 'red';}, 2000);
+        setTimeout(() => {light = 'red';}, 5000);
 
         console.log( stopMsg );
         socket.emitShout( stopMsg );
     
     }
 
-}, 15000 );
+}, 20000 );
 
 
 
