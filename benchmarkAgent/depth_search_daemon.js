@@ -32,7 +32,9 @@ export default function ( /**@type {DjsClientSocket}*/socket ) {
     } );
     
     var me = {x:-1, y:-1};
-    socket.onYou( ( {x, y} ) => {
+    socket.onSensing( ( { self } ) => {
+        if ( ! self ) return;
+        const {x, y} = self;
         me.x = x ? x : me.x;
         me.y = y ? y : me.y;
     } );

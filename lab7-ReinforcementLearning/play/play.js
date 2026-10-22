@@ -43,7 +43,8 @@ client.onMap( async (_width, _height, _tiles) => {
 var x=0, y=0;
 var layerArrayMe = Array.from({ length: width }, () => Array(height).fill(0));
 // var layerTensorMe;
-client.onYou( async ( me ) => {
+client.onSensing( async ( { self: me } ) => {
+    if ( ! me ) return;
     layerArrayMe[ x ][ y ] = 0;
     x = Math.ceil( me.x );
     y = Math.ceil( me.y );

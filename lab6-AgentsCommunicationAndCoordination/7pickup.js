@@ -2,7 +2,7 @@ import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
 import { ArgumentParser } from "argparse";
 
 const client = DjsConnect() // expect to get host and token from cmd args
-await new Promise( res => client.onYou( res ) );
+await client.me;
 
 const parser = new ArgumentParser({ description: 'Deliveroo agent' });
 parser.add_argument('--teamId', { help: 'Team agent ID' });

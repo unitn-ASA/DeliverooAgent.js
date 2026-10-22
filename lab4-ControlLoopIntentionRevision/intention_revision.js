@@ -21,7 +21,9 @@ function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
  */
 const me = {id: '', name: '', x: -1, y: -1, score: 0};
 
-socket.onYou( ( {id, name, x, y, score} ) => {
+socket.onSensing( ( { self } ) => {
+    if ( ! self ) return;
+    const {id, name, x, y, score} = self;
     me.id = id;
     me.name = name;
     me.x = x ? x : -1;
@@ -92,7 +94,6 @@ function optionsGeneration () {
  * Generate options at every sensing event
  */
 socket.onSensing( optionsGeneration )
-socket.onYou( optionsGeneration )
 
 // /**
 //  * Alternatively, generate options continuously

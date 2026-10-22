@@ -22,7 +22,7 @@ socket.onConfig( config => AOD = config.GAME.player.observation_distance );
 /** @type {IOAgent} */
 var me;
 
-socket.onYou( m => me = m );
+socket.onSensing( ( { self } ) => { if ( self ) me = self } );
 
 /**
  * @param {{x?:number,y?:number}} a1

@@ -3,7 +3,7 @@ import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
 
 const socket = DjsConnect();
 
-let me = await new Promise( res => socket.onYou( res ) );
+let me = await socket.me;
 let name = me.name;
 
 // const client2 = DjsConnect(

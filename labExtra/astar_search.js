@@ -26,7 +26,7 @@ client.onTile( ( x, y, delivery ) => {
 
 
 
-const {x: init_x, y: init_y} = await new Promise( res => client.onYou( res ) );
+const {x: init_x, y: init_y} = await client.me;
 const target_x = parseInt( process.argv[2] ), target_y = parseInt( process.argv[3] );
 console.log('go from', init_x, init_y, 'to', target_x, target_y);
 

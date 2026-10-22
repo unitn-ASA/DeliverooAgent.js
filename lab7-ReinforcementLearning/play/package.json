@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "@tensorflow/tfjs-node": "^3.18.0",
-    "@unitn-asa/deliveroo-js-client": "^0.0.37",
+    "@unitn-asa/deliveroo-js-sdk": "^3.0.0",
     "canvas": "^2.11.2",
     "socket.io-client": "^4.6.0"
   }

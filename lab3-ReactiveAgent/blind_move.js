@@ -30,7 +30,9 @@ socket.onTile( ({x, y, type}) => {
 const me = {};
 
 await new Promise( res => {
-    socket.onYou( ( {id, name, x, y, score} ) => {
+    socket.onSensing( ( { self } ) => {
+        if ( ! self ) return;
+        const {id, name, x, y, score} = self;
         me.id = id
         me.name = name
         me.x = x
@@ -52,7 +54,14 @@ console.log(me.name, 'goes from', me.x, me.y, 'to', target.x, target.y);
 
 while ( me.x != target.x || me.y != target.y ) {
 
-    var m = new Promise( res => socket.onYou( m => m.x % 1 != 0 || m.y % 1 != 0 ? null : res() ) );
+    var m = new Promise( res => {
+        const listener = ( { self } ) => {
+            if ( ! self || self.x % 1 != 0 || self.y % 1 != 0 ) return;
+            socket.off( "sensing", listener );
+            res();
+        };
+        socket.onSensing( listener );
+    } );
 
     if ( me.x && me.x < target.x )
         await socket.emitMove('right');

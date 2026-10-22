@@ -6,7 +6,7 @@ const socket = DjsConnect(
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjBhNTgyZCIsIm5hbWUiOiJtYXJjbyIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzczODQ3MjQxfQ.6no1FuNTkhe-y3Ge5Nt0Faj2CAmnyRX3gEjE5aF6GuI'
 )
 
-await new Promise( res => socket.onYou( res ) );
+await socket.me;
 
 socket.onMsg( async (id, name, msg, reply) => {
     console.log("new msg received from", name+':', msg);

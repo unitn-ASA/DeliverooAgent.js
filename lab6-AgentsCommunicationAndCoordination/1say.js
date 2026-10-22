@@ -3,7 +3,7 @@ import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
 
 const socket = DjsConnect('https://deliveroojs.bears.disi.unitn.it/?name=teller');
 
-await new Promise( res => socket.onYou( res ) );
+await socket.me;
 
 await socket.emitSay( '0a582d', {
     hello: 'stranger 0a582d',

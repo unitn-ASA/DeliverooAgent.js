@@ -166,7 +166,7 @@ ADMIN_TOKEN=your_admin_token_here
 Install required packages:
 
 ```bash
-npm install @unitn-asa/deliveroo-js-client@latest
+npm install @unitn-asa/deliveroo-js-sdk@latest
 npm install argparse dotenv
 ```
 

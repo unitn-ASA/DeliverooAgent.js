@@ -17,8 +17,9 @@ socket.on("disconnect", () => {
     console.log( "socket disconnect", socket.id ); // x8WIv7-mJelg7on_ALbxc
 });
 
-socket.on("you", ({id, name, x, y, score}) => {
-    // console.log("you", {id, name, x, y, score})
+socket.on("sensing", ({self}) => {
+    if (!self) return;
+    // const {id, name, x, y, score} = self;
 });
 
 

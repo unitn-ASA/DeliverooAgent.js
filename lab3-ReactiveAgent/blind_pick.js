@@ -10,7 +10,9 @@ const socket = DjsConnect();
  */
 const me = {id: '', name: '', x: -1, y: -1, score: 0};
 
-socket.onYou( ( {id, name, x, y, score} ) => {
+socket.onSensing( ( { self } ) => {
+    if ( ! self ) return;
+    const {id, name, x, y, score} = self;
     // console.log( 'me:', me.x, me.y );
     me.id = id;
     me.name = name;
@@ -49,7 +51,14 @@ async function blindMove ( target ) {
     
     console.log(me.name, 'goes from', me.x, me.y, 'to', target.x, target.y);
 
-    var m = new Promise( res => socket.onYou( m => m.x % 1 != 0 || m.y % 1 != 0 ? null : res() ) );
+    var m = new Promise( res => {
+        const listener = ( { self } ) => {
+            if ( ! self || self.x % 1 != 0 || self.y % 1 != 0 ) return;
+            socket.off( "sensing", listener );
+            res();
+        };
+        socket.onSensing( listener );
+    } );
 
     if ( me.x < target.x )
         await socket.emitMove('right');

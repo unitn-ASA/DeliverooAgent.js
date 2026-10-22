@@ -35,7 +35,9 @@ function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
  */
 /** @type  {me } */
 const me = { id:'', name:'', x:-1, y:-1, score:0, carrying: new Map() };
-client.onYou( ( {id, name, x, y, score} ) => {
+client.onSensing( ( { self } ) => {
+    if ( ! self ) return;
+    const {id, name, x, y, score} = self;
     me.id = id
     me.name = name
     me.x = x ? x : me.x

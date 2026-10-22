@@ -1,1 +1,1 @@
-/usr/bin/env npm install @unitn-asa/deliveroo-js-client@latest
+/usr/bin/env npm install @unitn-asa/deliveroo-js-sdk@latest

@@ -13,7 +13,7 @@ socket.onMap( (x,y,tiles) => {
     // console.log('Map:', x,y,tiles);
 } )
 
-socket.onYou( me => {
+socket.onSensing( ( { self: me } ) => {
     // console.log('You:', me);
 })
 socket.onSensing( ( sensing ) => {

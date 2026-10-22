@@ -4,8 +4,8 @@ const socket = DjsConnect();
 
 let myPosition = { x: 0, y: 0 };
 
-socket.on('you', (id, name, x, y) => {
-    myPosition = { x, y };
+socket.onSensing( ( { self } ) => {
+    if ( self ) myPosition = { x: self.x, y: self.y };
 });
 
 socket.on('map', async (width, height, tiles) => {

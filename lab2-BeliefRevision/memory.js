@@ -13,7 +13,7 @@ socket.onConfig( config => OBSERVATION_DISTANCE = config.GAME.player.observation
 
 /** @type {import('@unitn-asa/deliveroo-js-sdk/client').IOAgent} */
 var me;
-socket.onYou( m => me = m );
+socket.onSensing( ( { self } ) => { if ( self ) me = self } );
 
 socket.onSensing( ( sensing ) => {
     const timestamp = Date.now() - start;

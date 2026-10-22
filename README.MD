@@ -1,5 +1,5 @@
 # DeliverooAgent.js
 
-To update `deliveroo-js-client` dependency run:
+To update `deliveroo-js-sdk` dependency run:
 
-    $ npm install @unitn-asa/deliveroo-js-client@latest
+    $ npm install @unitn-asa/deliveroo-js-sdk@latest

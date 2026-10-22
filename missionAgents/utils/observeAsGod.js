@@ -37,11 +37,7 @@ export async function observeAsGod ( socket, { onDelivery, onPutdown, onPickup, 
     /**
      * @type {IOAgentEnhanced}
      */
-    const me = await new Promise( res => {
-        socket.onceYou( me => {            
-            res( {...me, connected:true} );
-        } )
-    } );
+    const me = { ...( await socket.me ), connected: true };
 
     /**
      * @type { Map< string, IOAgentEnhanced > }

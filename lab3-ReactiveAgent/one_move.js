@@ -13,7 +13,9 @@ function distance( {x:x1, y:y1}, {x:x2, y:y2}) {
 /** @type { {id:string, name:string, x:number, y:number, score:number} } */
 const me = {};
 
-socket.onYou( ( {id, name, x, y, score} ) => {
+socket.onSensing( ( { self } ) => {
+    if ( ! self ) return;
+    const {id, name, x, y, score} = self;
     me.id = id;
     me.name = name;
     me.x = x ? x : me.x;
