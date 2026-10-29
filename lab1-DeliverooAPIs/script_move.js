@@ -12,8 +12,8 @@ async function myFn () {
 
 myFn ()
 
-socket.on( 'tile', (x, y, delivery) => {
-    console.log(x, y, delivery)
+socket.onTile( ( {x, y, type} ) => {
+    console.log(x, y, type)
 } )
 
 /**

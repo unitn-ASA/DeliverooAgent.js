@@ -128,7 +128,7 @@ DjsConnect
 
 Method 1: Hardcoded
 ```javascript
-const socket = DjsConnect( 'localhost:8080', 'YOUR_TOKEN' } );
+const socket = DjsConnect( 'http://localhost:8080', 'YOUR_TOKEN' );
 ```
 
 Method 2: Environment Variables
@@ -139,6 +139,13 @@ TOKEN=your_token_here
 # or
 NAME=MyAgentName
 ```
+```javascript
+import 'dotenv/config'
+const socket = DjsConnect(); // reads HOST, TOKEN and NAME from process.env
+```
+
+- With a `TOKEN` you reconnect as the **same agent**; with only a `NAME` a **new agent** is created
+- `import 'dotenv/config'` loads the `.env` file from the **current directory** into `process.env`
 
 ---
 
@@ -155,14 +162,17 @@ const result = await socket.emitMove('up'); // 'right', 'left', 'down'
 ### Pickup Parcels
 ```javascript
 const parcels = await socket.emitPickup();
-// Returns: [{id, x, y, carriedBy, reward}, ...]
+// Returns: [{id}, ...] the picked up parcels
 ```
 
 ### Drop Parcels
 ```javascript
 const dropped = await socket.emitPutdown(selected);
-// selected: array of parcel IDs (or undefined for all)
+// selected: array of parcel IDs (or empty / undefined for all)
+// Returns: [{id}, ...] the dropped parcels
 ```
+
+Each action resolves only when the server **acknowledges** it: `await` waits for the action to be completed.
 
 ---
 
@@ -171,20 +181,43 @@ const dropped = await socket.emitPutdown(selected);
 The API uses Node.js **EventEmitter** pattern:
 
 ```javascript
-// Agent identity
-socket.on('you', (id, name, x, y, score) => { /* ... */ });
+// Game configuration
+socket.onConfig( (config) => { /* ... */ });
 
 // Map information
-socket.on('map', (width, height, tiles) => { /* ... */ });
-socket.on('tile', (x, y, delivery) => { /* ... */ });
+socket.onMap( (width, height, tiles) => { /* ... */ });
+socket.onTile( ({x, y, type}) => { /* ... */ });
 
-// Sensing
-  socket.on('sensing', ({frame, self, positions, agents, parcels, crates, entities}) => { /* ... */ });
+// Sensing, including myself (self)
+socket.onSensing( ({frame, self, positions, agents, parcels, crates, entities}) => { /* ... */ });
 
 // Connection
-socket.on('connect', () => { /* ... */ });
-socket.on('disconnect', () => { /* ... */ });
+socket.onConnect( () => { /* ... */ });
+socket.onDisconnect( () => { /* ... */ });
 ```
+
+- `onXxx( cb )` is a typed shortcut for `socket.on( 'xxx', cb )`
+- My own agent is `sensing.self`; it is also available as a Promise: `const me = await socket.me`
+
+---
+
+## `demo_EventEmitter.js` – Events and acknowledgements
+
+```javascript
+import { EventEmitter } from 'events';
+const eventEmitter = new EventEmitter();
+
+eventEmitter.on('start', (start, end, ack) => {
+    console.log(`started from ${start} to ${end}`);
+    ack();
+});
+
+eventEmitter.emit( 'start', 1, 100, ()=>{console.log('message received')} );
+```
+
+- `on` registers a **listener**, `emit` triggers all the listeners of that event, passing the arguments
+- The last argument is a **callback** used by the listener to **acknowledge** the event
+- Socket.io works the same way over the network: `emitMove`, `emitPickup`, ... wrap the acknowledgement callback in a **Promise**
 
 <!-- ---
 
@@ -224,10 +257,9 @@ socket.on('msg', (id, name, msg, replyCallback) => {
 IOAgent: {
     id: string,
     name: string,
-    teamId: string,
-    x: number, y: number,
-    score: number,
-    penalty: number
+    teamId: string, teamName: string,
+    x?: number, y?: number,   // undefined when not known
+    score: number
 }
 IOParcel: {
     id: string,
@@ -237,43 +269,59 @@ IOParcel: {
 }
 IOTile: {
     x: number, y: number,
-    type: '0'|'1'|'2'|'3'|'4'|'5'|'←'|'↑'|'→'|'↓'
-    // 0: wall, 1: spawner, 2: delivery, 3: walkable, 4: base
+    type: '0'|'1'|'2'|'3'|'4'|'5'|'5!'|'6'|'7'|'8'|'9'|'←'|'↑'|'→'|'↓'
+    // 0: wall, 1: parcel spawner, 2: delivery, 3: walkable, 4: base,
+    // 5: crate sliding, 5!: crate spawner, 6: battery spawner, 7: door,
+    // 8: key spawner, 9: double delivery, arrows: one-way tiles
 }
 ```
 
 ---
 
-## Complete Agent Example
+## Complete Agent Example – `es.js`
 
 ```javascript
-import { DjsConnect } from '@unitn-asa/deliveroo-js-sdk';
+import 'dotenv/config'
+import { DjsConnect } from '@unitn-asa/deliveroo-js-sdk/client';
 
-const socket = DjsConnect('localhost:8080');
+const socket = DjsConnect();
 
 let myPosition = { x: 0, y: 0 };
 
-socket.on('you', (id, name, x, y) => {
-    myPosition = { x, y };
+socket.onSensing( ( { self } ) => {
+    if ( self?.x != undefined && self?.y != undefined )
+        myPosition = { x: self.x, y: self.y };
 });
+```
 
-socket.on('map', async (width, height, tiles) => {
-    // Move along predefined path
+- Import from `@unitn-asa/deliveroo-js-sdk/client`: the package root only exports the `DjsSdkClient` and `DjsSdkServer` namespaces
+- My position is updated at every sensing event, where `self` is my own agent
+
+---
+
+## Complete Agent Example – Following a path
+
+```javascript
+socket.onMap( async (width, height, tiles) => {
     const path = ['right', 'right', 'down', 'down', 'left', 'left', 'up', 'up'];
 
     for (const direction of path) {
-        const result = await socket.emitMove(direction);
-        if (!result) {
+        // Insist on the path: retry the same move until it succeeds (or give up)
+        let result = await socket.emitMove(direction);
+        for ( let retries = 0; ! result && retries < 10; retries++ ) {
             console.log(`Move ${direction} failed, retrying...`);
             await new Promise(r => setTimeout(r, 100));
-            // Retry logic here
+            result = await socket.emitMove(direction);
         }
     }
 
-    // Pickup parcels
-    await socket.emitPickup();
+    const picked = await socket.emitPickup();
+    console.log( 'Picked up', picked.length, 'parcels' );
 });
 ```
+
+- The agent starts once the **map** is received
+- `emitMove` resolves to `false` when the move fails (wall, another agent on the tile, ...): the agent **waits and retries**, then gives up after 10 attempts
 
 ---
 
@@ -337,6 +385,32 @@ What if other agents are moving?
 
 Next Steps
 - Implement basic navigation
+
+---
+
+## `script_move.js` – A starting point
+
+```javascript
+import 'dotenv/config'
+import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
+
+const socket = DjsConnect()
+
+async function myFn () {
+    let up = await socket.emitMove('up');
+    let right = await socket.emitMove('right');
+}
+
+myFn ()
+
+socket.onTile( ( {x, y, type} ) => {
+    console.log(x, y, type)
+} )
+```
+
+- `myFn` performs two moves **in sequence**: `right` starts only after `up` is completed
+- `up` and `right` hold the result of each move: the new `{x, y}`, or `false` if it failed
+- `onTile` prints the tiles as they are received: use the tile `type` to find **delivery** tiles (`'2'`)
 
 ---
 
