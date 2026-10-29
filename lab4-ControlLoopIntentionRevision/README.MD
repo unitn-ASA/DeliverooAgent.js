@@ -32,6 +32,9 @@ style: |
     padding: 15px;
     border-radius: 8px;
   }
+backgroundImage: url('https://marp.app/assets/hero-background.svg')
+header: 'Control Loop and Intention Revision · [DeliverooAgent.js](https://github.com/unitn-ASA/DeliverooAgent.js) · [Deliveroo.js](https://github.com/unitn-ASA/Deliveroo.js)'
+footer: 'Marco Robol - University of Trento, A.Y. 2026/2027 - Autonomous Software Agents'
 ---
 
 <!-- _class: lead -->
@@ -47,6 +50,9 @@ style: |
 - sub-plan: a plan could rely on other plans
 - plans could be stopped at any time from the outside
 
+Code: [https://github.com/unitn-ASA/DeliverooAgent.js](https://github.com/unitn-ASA/DeliverooAgent.js)
+Deliveroo.js: [https://github.com/unitn-ASA/Deliveroo.js](https://github.com/unitn-ASA/Deliveroo.js)
+
 ---
 
 # Intention Revision
@@ -57,4 +63,11 @@ style: |
 
 - **Revise** - to be done - when an option is selected, options are resorted based on some utility function - overall reward depends also on order of execution of each single intention - current plan may either be: (i) continued, or (ii) terminated and forgotten, or (iii) terminated but maintained in the queue.
 
+---
 
+<!-- _class: lead -->
+
+# Questions?
+
+Code: [https://github.com/unitn-ASA/DeliverooAgent.js](https://github.com/unitn-ASA/DeliverooAgent.js)
+Deliveroo.js: [https://github.com/unitn-ASA/Deliveroo.js](https://github.com/unitn-ASA/Deliveroo.js)

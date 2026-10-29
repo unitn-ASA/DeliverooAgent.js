@@ -1,7 +1,6 @@
 import dotenv from 'dotenv'
 dotenv.config({path: '../.env', override: true})
 import { DjsConnect } from "@unitn-asa/deliveroo-js-sdk/client";
-/** @typedef {import("@unitn-asa/deliveroo-js-sdk/client").IOAgent} IOAgent */
 
 
 
@@ -14,29 +13,19 @@ const beliefset = new Map();
 /** @type {number} */
 const start = Date.now();
 
-/** @type {number} */
-var AOD;
-
-socket.onConfig( config => AOD = config.GAME.player.observation_distance );
-
-/** @type {IOAgent} */
-var me;
-
-socket.onSensing( ( { self } ) => { if ( self ) me = self } );
-
-/**
- * @param {{x?:number,y?:number}} a1
- * @param {{x?:number,y?:number}} a2
- * @returns {number}
- */
-const dist = (a1, a2) => a1.x && a1.y && a2.x && a2.y ? Math.abs(a1.x-a2.x) + Math.abs(a1.y-a2.y) : Infinity;
-
 socket.onSensing( ( sensing ) => {
+
+    /**
+     * Is tile x,y currently within my sensing area?
+     * @param {{x:number,y:number}} tile
+     * @returns {boolean}
+     */
+    const isSensed = ( {x, y} ) => !! sensing.positions?.some( p => p.x == x && p.y == y );
     
     for (const a of sensing.agents) {
 
         // if x or y are undefined, skip him, I don't know where he is and I can't do anything with him
-        if ( !a.x || !a.y )
+        if ( a.x == undefined || a.y == undefined )
             continue;
         
         // if the agent is moving between two tiles, skip him
@@ -46,7 +35,7 @@ socket.onSensing( ( sensing ) => {
         // I meet someone for the first time
         if ( ! beliefset.has(a.id) ) {
             
-            console.log( "Nice to meet you", a.name );
+            console.log( 'Hello', a.name );
             beliefset.set( a.id, [{ name: a.name, x: a.x, y: a.y }] );
 
         } else { // I remember him
@@ -57,16 +46,18 @@ socket.onSensing( ( sensing ) => {
 
             // this is about the last time I saw him
             const last = history[history.length-1]
-            const second_last = (history.length>2 ? history[history.length-2] : 'no knowledge')
+            const second_last = (history.length>1 ? history[history.length-2] : 'no knowledge')
             
             if ( typeof(last) === 'object' ) { // I was seeing him also last time
 
                 if ( last.x != a.x || last.y != a.y ) { // But he moved
                 
                     history.push( { name: a.name, x: a.x, y: a.y } )
-                    console.log( 'I\'m seeing you moving', a.name )
+                    console.log( 'You are moving', a.name )
                 
                 } else { // Still here but not moving
+
+                    console.log( 'You are still in same place as before' )
 
                 }                
 
@@ -105,8 +96,8 @@ socket.onSensing( ( sensing ) => {
                 
                 console.log( 'Its a while that I don\'t see', second_last.name, 'I remember him in', second_last.x, second_last.y );
                 
-                if ( dist(me, second_last) <= 3 ) {
-                    console.log( 'I remember', second_last.name, 'was within 3 tiles from here. Forget him.' );
+                if ( isSensed(second_last) ) {
+                    console.log( 'I remember', second_last.name, 'was here, but I cannot see him anymore. Forget him.' );
                     beliefset.delete(id)
                 }
 

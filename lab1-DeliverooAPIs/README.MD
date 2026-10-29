@@ -32,6 +32,9 @@ style: |
     padding: 15px;
     border-radius: 8px;
   }
+backgroundImage: url('https://marp.app/assets/hero-background.svg')
+header: 'Deliveroo.js APIs · [DeliverooAgent.js](https://github.com/unitn-ASA/DeliverooAgent.js) · [Deliveroo.js](https://github.com/unitn-ASA/Deliveroo.js)'
+footer: 'Marco Robol - University of Trento, A.Y. 2026/2027 - Autonomous Software Agents'
 ---
 
 <!-- _class: lead -->
@@ -40,6 +43,9 @@ style: |
 ## Lab 1: Introduction to Agent Development
 
 Building autonomous agents for the Deliveroo.js environment
+
+Code: [https://github.com/unitn-ASA/DeliverooAgent.js](https://github.com/unitn-ASA/DeliverooAgent.js)
+Deliveroo.js: [https://github.com/unitn-ASA/Deliveroo.js](https://github.com/unitn-ASA/Deliveroo.js)
 
 ---
 
@@ -173,8 +179,7 @@ socket.on('map', (width, height, tiles) => { /* ... */ });
 socket.on('tile', (x, y, delivery) => { /* ... */ });
 
 // Sensing
-socket.on('agentsSensing', (agents) => { /* ... */ });
-socket.on('parcelsSensing', (parcels) => { /* ... */ });
+  socket.on('sensing', ({frame, self, positions, agents, parcels, crates, entities}) => { /* ... */ });
 
 // Connection
 socket.on('connect', () => { /* ... */ });
@@ -333,3 +338,11 @@ What if other agents are moving?
 Next Steps
 - Implement basic navigation
 
+---
+
+<!-- _class: lead -->
+
+# Questions?
+
+Code: [https://github.com/unitn-ASA/DeliverooAgent.js](https://github.com/unitn-ASA/DeliverooAgent.js)
+Deliveroo.js: [https://github.com/unitn-ASA/Deliveroo.js](https://github.com/unitn-ASA/Deliveroo.js)

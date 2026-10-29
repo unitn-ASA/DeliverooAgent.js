@@ -32,6 +32,7 @@ style: |
     padding: 15px;
     border-radius: 8px;
   }
+header: 'First Challenge · [DeliverooAgent.js](https://github.com/unitn-ASA/DeliverooAgent.js) · [Deliveroo.js](https://github.com/unitn-ASA/Deliveroo.js)'
 ---
 
 <!-- _class: lead -->
@@ -42,6 +43,9 @@ Testing your agents togheter in the Deliveroo.js environment, no matter the perf
 
 ### April 21st support
 ### April 22st no class (ICT Days)
+
+Code: [https://github.com/unitn-ASA/DeliverooAgent.js](https://github.com/unitn-ASA/DeliverooAgent.js)
+Deliveroo.js: [https://github.com/unitn-ASA/Deliveroo.js](https://github.com/unitn-ASA/Deliveroo.js)
 
 ---
 
@@ -69,4 +73,11 @@ Only in the very last scenarios we will try some simple map with crates, still t
 
 This is not mandatory for the course, but it is a good opportunity to test your agents in a more realistic environment and also to have fun together!
 
+---
 
+<!-- _class: lead -->
+
+# Questions?
+
+Code: [https://github.com/unitn-ASA/DeliverooAgent.js](https://github.com/unitn-ASA/DeliverooAgent.js)
+Deliveroo.js: [https://github.com/unitn-ASA/Deliveroo.js](https://github.com/unitn-ASA/Deliveroo.js)

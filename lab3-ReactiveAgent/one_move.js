@@ -18,8 +18,8 @@ socket.onSensing( ( { self } ) => {
     const {id, name, x, y, score} = self;
     me.id = id;
     me.name = name;
-    me.x = x ? x : me.x;
-    me.y = y ? y : me.y;
+    if ( x != undefined ) me.x = x;
+    if ( y != undefined ) me.y = y;
     me.score = score;
 } )
 
@@ -41,14 +41,25 @@ socket.onSensing( async ( sensings ) => {
     
     for ( let p of sensings.parcels ) {
         if ( ! p.carriedBy ) {
+            /** @type { 'right' | 'left' | 'up' | 'down' | undefined } */
+            let direction;
             if      ( me.x == p.x-1 && me.y == p.y )
-                await socket.emitMove('right');
+                direction = 'right';
             else if ( me.x == p.x+1 && me.y == p.y )
-                await socket.emitMove('left')
+                direction = 'left';
             else if ( me.y == p.y-1 && me.x == p.x )
-                await socket.emitMove('up')
+                direction = 'up';
             else if ( me.y == p.y+1 && me.x == p.x )
-                await socket.emitMove('down')
+                direction = 'down';
+
+            if ( direction ) {
+                // emitMove resolves to the new position, or false if the move failed
+                const moved = await socket.emitMove( direction );
+                if ( moved ) {
+                    me.x = moved.x;
+                    me.y = moved.y;
+                }
+            }
 
             if ( me.x == p.x && me.y == p.y ) {
                 await socket.emitPickup();

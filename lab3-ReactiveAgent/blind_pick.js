@@ -16,8 +16,8 @@ socket.onSensing( ( { self } ) => {
     // console.log( 'me:', me.x, me.y );
     me.id = id;
     me.name = name;
-    me.x = x ? x : me.x;
-    me.y = y ? y : me.y;
+    if ( x != undefined ) me.x = x;
+    if ( y != undefined ) me.y = y;
     me.score = score;
 } )
 
@@ -29,8 +29,10 @@ socket.onSensing( ( { self } ) => {
 const parcels = new Map();
 
 socket.onSensing( async ( sensing ) => {
+    // reactive agent: beliefs about parcels are only what is currently perceived
+    parcels.clear();
     for ( let p of sensing.parcels ) {
-        parcels.set( `${p.x}_${p.y}`, p );
+        parcels.set( p.id, p );
     }
 } )
 
@@ -109,10 +111,11 @@ while (true) {
     console.log( 'nearest', nearest.id, nearest.x, nearest.y );
     
     await blindMove( nearest )
-    console.log( 'moved to parcel', nearest.id, me.x, me.y );
     
-    await socket.emitPickup();
-    
-    console.log( 'picked up' );
+    // pick up only once on the parcel tile, otherwise re-evaluate the nearest parcel
+    if ( me.x == nearest.x && me.y == nearest.y ) {
+        const picked = await socket.emitPickup();
+        console.log( 'picked up', picked.map( p => p.id ).join( ' ' ) );
+    }
 
 }

@@ -7,13 +7,16 @@ const socket = DjsConnect();
 const beliefset = new Map();
 const start = Date.now();
 
-/** @type {number} */
-var OBSERVATION_DISTANCE;
-socket.onConfig( config => OBSERVATION_DISTANCE = config.GAME.player.observation_distance );
-
-/** @type {import('@unitn-asa/deliveroo-js-sdk/client').IOAgent} */
-var me;
-socket.onSensing( ( { self } ) => { if ( self ) me = self } );
+// Previous implementation, based on the observation distance from the config
+// /** @type {number} */
+// var OBSERVATION_DISTANCE;
+// socket.onConfig( config => OBSERVATION_DISTANCE = config.GAME.player.observation_distance );
+//
+// /** @type {import('@unitn-asa/deliveroo-js-sdk/client').IOAgent} */
+// var me;
+// socket.onSensing( ( { self } ) => { if ( self ) me = self } );
+//
+// const dist = (a1,a2) => Math.abs(a1.x-a2.x) + Math.abs(a1.y-a2.y);
 
 socket.onSensing( ( sensing ) => {
     const timestamp = Date.now() - start;
@@ -40,13 +43,16 @@ socket.onSensing( ( sensing ) => {
         }
         beliefset.get( a.id )?.push( log );
     }
-    // compute if within perceiving area
-    let prettyPrint = Array.from(beliefset.values()).map( (logs) => {
-        const {timestamp,name,x,y,direction} = logs[logs.length-1]
-        const d = dist( me, {x,y} );
-        return `${name}(${direction},${d<OBSERVATION_DISTANCE})@${timestamp}:${x},${y}`;
-    }).join(' ');
-    console.log(prettyPrint)
+    // print, for each agent, its perception history from the most recent one
+    for ( const logs of beliefset.values() ) {
+        const {id,name,x,y,direction} = logs[logs.length-1]
+        // compute if last known position is within perceiving area
+        // (round, since a moving agent is in between two tiles)
+        const inView = !! sensing.positions?.some( p => p.x == Math.round(x) && p.y == Math.round(y) );
+        // Previous implementation, based on the observation distance from the config
+        // const inView = dist( me, {x,y} ) < OBSERVATION_DISTANCE;
+        const history = logs.slice().reverse().map( ({timestamp,x,y}) => `@${timestamp}:${x},${y}` ).join(' ');
+        console.log( `${id}${history} (${name}, ${direction}, ${inView})` );
+    }
 } )
-const dist = (a1,a2) => Math.abs(a1.x-a2.x) + Math.abs(a1.y-a2.y);
 

@@ -50,6 +50,10 @@ const target = {
     x: Number.parseInt(process.argv[2]),
     y: Number.parseInt(process.argv[3])
 };
+if ( Number.isNaN(target.x) || Number.isNaN(target.y) ) {
+    console.error('Usage: node blind_move.js <x> <y>');
+    process.exit(1);
+}
 console.log(me.name, 'goes from', me.x, me.y, 'to', target.x, target.y);
 
 while ( me.x != target.x || me.y != target.y ) {
@@ -63,17 +67,15 @@ while ( me.x != target.x || me.y != target.y ) {
         socket.onSensing( listener );
     } );
 
-    if ( me.x && me.x < target.x )
+    if ( me.x < target.x )
         await socket.emitMove('right');
-    else if ( me?.x && me.x > target.x )
+    else if ( me.x > target.x )
         await socket.emitMove('left');
     
-    if ( me?.y && me.y < target.y )
+    if ( me.y < target.y )
         await socket.emitMove('up');
-    else if ( me?.y && me.y > target.y ) {
+    else if ( me.y > target.y )
         await socket.emitMove('down');
-        // me.y -= 1;
-    }
 
     await m;
     console.log(me.name, 'Moved to', me.x, me.y);

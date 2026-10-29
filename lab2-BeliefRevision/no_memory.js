@@ -13,8 +13,9 @@ socket.onMap( (x,y,tiles) => {
     // console.log('Map:', x,y,tiles);
 } )
 
-socket.onSensing( ( { self: me } ) => {
+socket.onSensing( ( { self: me, positions } ) => {
     // console.log('You:', me);
+    // console.log('Sensed tiles:', positions?.length);
 })
 socket.onSensing( ( sensing ) => {
 
